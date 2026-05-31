@@ -251,6 +251,12 @@
             font-size: 1rem; cursor: pointer; font-weight: 600;
         }
         button.primary:hover { background: #1d4ed8; }
+        button.secondary {
+            width: 100%; padding: 10px; margin-top: 8px;
+            background: #f3f4f6; color: #374151; border: 1px solid #d1d5db;
+            border-radius: 8px; font-size: 0.95rem; cursor: pointer; font-weight: 600;
+        }
+        button.secondary:hover { background: #e5e7eb; }
 
         .wind-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
         .wind-row input[type=range] { flex: 1; }
@@ -447,6 +453,7 @@
     <!-- Menu chính -->
     <div id="menuOverlay" class="overlay">
         <div class="panel">
+            <button type="button" class="panel-close hidden" id="btnMenuClose" title="Tiếp tục bay" aria-label="Tiếp tục bay">×</button>
             <span class="badge">BQP VN · Huấn luyện UAV tác chiến</span>
             <h1>HL UAV tác chiến — Kịch bản theo đơn vị</h1>
             <p>Mô phỏng <strong>VLOS tác chiến</strong>: trinh sát · chống UAV bay thấp · bảo vệ mục tiêu · liên hợp đa phương. Đe dọa <strong>m/ph hướng Đ</strong> · yểm trợ <strong>◆US ◆RU m/ph</strong>.</p>
@@ -488,6 +495,7 @@
                 <button type="button" data-skill="nang-cao">Nâng cao</button>
             </div>
 
+            <button type="button" class="secondary hidden" id="btnMenuResume">← Tiếp tục bay</button>
             <button type="button" class="primary" id="btnStart">▶ Bắt đầu bay</button>
             <p class="company-menu" id="companyMenu">Công Ty TNHH Công Nghệ Đông A</p>
         </div>
@@ -520,6 +528,6 @@
         </div>
     </div>
 </div>
-<script type="module" src="./game.js?v=20260531"></script>
+<script type="module" src="./game.js?v=20260531b"></script>
 </body>
 </html>

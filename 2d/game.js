@@ -26,6 +26,7 @@ let windStrength = 0;
 let windAngle = 0;
 let inThreatZone = false;
 let threatPulse = 0;
+let menuCanResume = false;
 
 const drone = { x: 400, y: 300, angle: 0, vx: 0, vy: 0, alt: 0.5 };
 let scale = 1, offsetX = 0, offsetY = 0;
@@ -551,10 +552,8 @@ function drawFinishBanner() {
     /* Hoàn thành hiển thị qua #finishOverlay (HTML) */
 }
 
-function exitToMainMenu() {
-    document.getElementById('helpOverlay')?.classList.add('hidden');
-    hideActionToast();
-    showMenu(true);
+function toggleHelp() {
+    document.getElementById('helpOverlay').classList.toggle('hidden');
 }
 
 function render() {
@@ -620,16 +619,48 @@ function buildFeatureList() {
     ).join('');
 }
 
-function showMenu(show) {
-    document.getElementById('menuOverlay').classList.toggle('hidden', !show);
-    document.getElementById('gameUi').classList.toggle('hidden', show);
-    setTouchControlsVisible(!show);
-    running = !show;
-    if (!show) resetDrone();
+function updateMenuResumeUi() {
+    const show = menuCanResume;
+    document.getElementById('btnMenuClose')?.classList.toggle('hidden', !show);
+    document.getElementById('btnMenuResume')?.classList.toggle('hidden', !show);
 }
 
-function toggleHelp() {
-    document.getElementById('helpOverlay').classList.toggle('hidden');
+function showMenu(show, opts = {}) {
+    if (show) {
+        document.getElementById('menuOverlay').classList.remove('hidden');
+        document.getElementById('gameUi').classList.add('hidden');
+        setTouchControlsVisible(false);
+        running = false;
+        updateMenuResumeUi();
+        return;
+    }
+
+    document.getElementById('menuOverlay').classList.add('hidden');
+    document.getElementById('gameUi').classList.remove('hidden');
+    setTouchControlsVisible(true);
+    running = true;
+    menuCanResume = false;
+    updateMenuResumeUi();
+    if (!opts.resume) resetDrone();
+}
+
+function pauseToMenu() {
+    const menuHidden = document.getElementById('menuOverlay').classList.contains('hidden');
+    const gameVisible = !document.getElementById('gameUi').classList.contains('hidden');
+    menuCanResume = menuHidden && gameVisible && running;
+    showMenu(true);
+}
+
+function resumeFromMenu() {
+    if (!menuCanResume) return;
+    showMenu(false, { resume: true });
+}
+
+function exitToMainMenu() {
+    document.getElementById('helpOverlay')?.classList.add('hidden');
+    hideActionToast();
+    menuCanResume = false;
+    showMenu(true);
 }
 
 document.getElementById('skillList').addEventListener('click', (e) => {
@@ -644,7 +675,9 @@ document.getElementById('btnStart').addEventListener('click', () => {
     showMenu(false);
 });
 
-document.getElementById('btnMenu').addEventListener('click', () => showMenu(true));
+document.getElementById('btnMenu').addEventListener('click', () => pauseToMenu());
+document.getElementById('btnMenuClose')?.addEventListener('click', () => resumeFromMenu());
+document.getElementById('btnMenuResume')?.addEventListener('click', () => resumeFromMenu());
 document.getElementById('btnPower').addEventListener('click', () => exitToMainMenu());
 document.getElementById('objExit')?.addEventListener('click', () => exitToMainMenu());
 document.getElementById('btnFinishMenu')?.addEventListener('click', () => exitToMainMenu());

@@ -2,15 +2,15 @@
 <html lang="vi">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
     <meta name="description" content="Huấn luyện drone 2D — BQP Việt Nam">
     <link rel="icon" type="image/x-icon" href="../media/favicon.ico">
     <title>BQP VN — Huấn luyện Drone 2D</title>
     <style>
         :root {
-            --sand: #b8a88a;
-            --sidebar: rgba(30, 30, 35, 0.82);
-            --panel: rgba(255, 255, 255, 0.92);
+        --sand: #a89576;
+        --sidebar: rgba(22, 22, 26, 0.88);
+        --panel: rgba(248, 250, 252, 0.94);
             --text: #1f2937;
             --muted: #6b7280;
             --accent: #2563eb;
@@ -28,6 +28,7 @@
             margin-left: 52px;
             width: calc(100% - 52px);
             height: 100%;
+            touch-action: none;
         }
 
         /* ── Sidebar trái ── */
@@ -52,7 +53,9 @@
         }
         .ui-card {
             background: var(--panel); border-radius: 8px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+            box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+            border: 1px solid rgba(255,255,255,0.65);
+            backdrop-filter: blur(6px);
             padding: 10px 12px; font-size: 0.78rem;
         }
         .ui-card h4 { margin: 0 0 6px; font-size: 0.72rem; color: var(--muted); font-weight: 600; text-transform: uppercase; }
@@ -81,7 +84,7 @@
             position: absolute; top: 12px; left: 64px; z-index: 15;
             background: var(--panel); border-radius: 8px;
             box-shadow: 0 2px 12px rgba(0,0,0,0.12);
-            padding: 8px 14px; max-width: 280px;
+            padding: 8px 32px 8px 14px; max-width: 280px;
         }
         #objective .title { font-size: 0.68rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
         #objective .text { font-size: 0.95rem; font-weight: 600; margin-top: 2px; }
@@ -152,7 +155,45 @@
             background: #fff; border-radius: 12px; padding: 24px 28px;
             max-width: min(96vw, 620px); max-height: 90vh; overflow-y: auto;
             box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+            position: relative;
         }
+        .panel-close {
+            position: absolute; top: 10px; right: 10px;
+            width: 32px; height: 32px; border: none; border-radius: 50%;
+            background: #fef2f2; color: #dc2626; font-size: 1.15rem; font-weight: 700;
+            cursor: pointer; line-height: 1; display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+        }
+        .panel-close:hover { background: #fee2e2; }
+        #objExit {
+            position: absolute; top: 6px; right: 6px;
+            width: 24px; height: 24px; border: none; border-radius: 6px;
+            background: #fef2f2; color: #dc2626; font-size: 0.95rem; font-weight: 700;
+            cursor: pointer; line-height: 1; padding: 0;
+        }
+        #objExit:hover { background: #fee2e2; }
+        #finishOverlay {
+            position: absolute; inset: 0; z-index: 40;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(0,0,0,0.45); pointer-events: auto;
+        }
+        #finishOverlay .finish-box {
+            background: #fff; border-radius: 12px; padding: 22px 28px 18px;
+            text-align: center; min-width: min(92vw, 320px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3); position: relative;
+        }
+        #finishOverlay h2 { margin: 0 0 6px; font-size: 1.2rem; color: #15803d; }
+        #finishOverlay .finish-time { font-family: monospace; font-size: 1.05rem; color: #374151; margin-bottom: 14px; }
+        #finishOverlay .finish-actions { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+        #finishOverlay button {
+            padding: 9px 16px; border-radius: 8px; border: none; font-size: 0.88rem;
+            font-weight: 600; cursor: pointer;
+        }
+        #finishOverlay .btn-menu { background: #2563eb; color: #fff; }
+        #finishOverlay .btn-menu:hover { background: #1d4ed8; }
+        #finishOverlay .btn-retry { background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; }
+        #finishOverlay .btn-retry:hover { background: #e5e7eb; }
+        #finishOverlay .panel-close { top: 8px; right: 8px; }
         .panel h1 { margin: 0 0 8px; font-size: 1.25rem; }
         .panel h2 { margin: 14px 0 6px; font-size: 0.9rem; color: var(--muted); }
         .panel p, .panel li { font-size: 0.86rem; line-height: 1.55; color: #374151; }
@@ -173,8 +214,25 @@
 
         .levels { display: flex; flex-direction: column; gap: 6px; margin: 10px 0; }
         .levels label {
-            display: flex; gap: 10px; padding: 10px 12px;
+            display: flex; gap: 10px; padding: 10px 14px;
             border: 1px solid #e5e7eb; border-radius: 8px; cursor: pointer;
+            align-items: flex-start; overflow: visible;
+        }
+        .levels label input[type="radio"] {
+            flex-shrink: 0; margin-top: 4px;
+        }
+        .levels label > span {
+            flex: 1; min-width: 0;
+            line-height: 1.5; overflow: visible;
+        }
+        .levels label strong {
+            display: block; margin-bottom: 3px;
+            line-height: 1.35;
+        }
+        .levels label small {
+            display: block; font-size: 0.8rem; color: #6b7280;
+            line-height: 1.45; overflow-wrap: break-word;
+            word-break: normal; padding-right: 2px;
         }
         .levels label:hover, .levels label:has(input:checked) {
             border-color: var(--accent); background: #eff6ff;
@@ -193,6 +251,12 @@
             font-size: 1rem; cursor: pointer; font-weight: 600;
         }
         button.primary:hover { background: #1d4ed8; }
+        button.secondary {
+            width: 100%; padding: 10px; margin-top: 8px;
+            background: #f3f4f6; color: #374151; border: 1px solid #d1d5db;
+            border-radius: 8px; font-size: 0.95rem; cursor: pointer; font-weight: 600;
+        }
+        button.secondary:hover { background: #e5e7eb; }
 
         .wind-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
         .wind-row input[type=range] { flex: 1; }
@@ -219,7 +283,76 @@
         .features-box li { margin: 3px 0; }
         .branch-header { user-select: none; }
 
+        /* ── Cần ảo mobile / tablet ── */
+        #touchControls {
+            position: absolute; inset: 0; z-index: 18;
+            pointer-events: none; display: none;
+        }
+        #touchControls.active { display: block; }
+        .touch-zone {
+            position: absolute; bottom: 20px;
+            width: min(132px, 26vw); height: min(132px, 26vw);
+            border-radius: 50%;
+            background: rgba(30, 30, 35, 0.45);
+            border: 2px solid rgba(255, 255, 255, 0.25);
+            pointer-events: auto;
+            touch-action: none;
+            user-select: none;
+        }
+        .touch-left { left: 58px; }
+        .touch-right { right: 10px; }
+        .touch-knob {
+            position: absolute; left: 50%; top: 50%;
+            width: 44%; height: 44%; border-radius: 50%;
+            background: rgba(37, 99, 235, 0.75);
+            border: 2px solid rgba(255, 255, 255, 0.85);
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        .touch-label {
+            position: absolute; bottom: -18px; left: 0; right: 0;
+            text-align: center; font-size: 0.62rem;
+            color: rgba(255,255,255,0.65); font-weight: 600;
+            pointer-events: none;
+        }
+
+        @media (hover: none) and (pointer: coarse), (max-width: 768px) {
+            #stickPanel { display: none; }
+            #topRight { top: 8px; right: 8px; gap: 6px; }
+            #topRight .ui-card { padding: 6px 8px; font-size: 0.7rem; }
+            #windDial { width: 48px; height: 48px; }
+            #objective { max-width: 210px; padding: 6px 10px; left: 58px; top: 8px; }
+            #objective .text { font-size: 0.85rem; }
+            #stats { left: 58px; bottom: 8px; padding: 6px 10px; font-size: 0.68rem; }
+            #altPanel { right: 8px; bottom: 160px; padding: 6px 8px; }
+            #altBar { height: 80px; }
+            #companyFooter { font-size: 0.58rem; right: 8px; bottom: 4px; max-width: 42vw; }
+            #companyHud { left: 58px; font-size: 0.58rem; }
+        }
+
         .hidden { display: none !important; }
+
+        #actionToast {
+            position: absolute; left: 50%; bottom: 118px; z-index: 18;
+            transform: translateX(-50%) translateY(12px);
+            max-width: min(340px, 88vw);
+            padding: 8px 14px; border-radius: 8px;
+            background: rgba(22, 101, 52, 0.92);
+            color: #fff; font-size: 0.82rem; font-weight: 600;
+            text-align: center; line-height: 1.35;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+            border: 1px solid rgba(255,255,255,0.35);
+            pointer-events: none; opacity: 0;
+            transition: opacity 0.25s ease, transform 0.25s ease;
+        }
+        #actionToast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        @media (hover: none) and (pointer: coarse), (max-width: 768px) {
+            #actionToast { bottom: 168px; font-size: 0.76rem; padding: 7px 12px; }
+        }
     </style>
 </head>
 <body>
@@ -238,6 +371,7 @@
 
     <div id="gameUi" class="hidden">
         <div id="objective">
+            <button type="button" id="objExit" title="Thoát về menu chính" aria-label="Thoát về menu">×</button>
             <div class="title">Flight Guide</div>
             <div class="text" id="objText">—</div>
             <div class="sub" id="objSub"></div>
@@ -256,6 +390,8 @@
                 <h4>Guide View</h4>
                 <label><input type="checkbox" id="chkPath" checked> Đường trinh sát</label>
                 <label><input type="checkbox" id="chkGrid" checked> Lưới sân</label>
+                <label><input type="checkbox" id="chkMap"> Ảnh vệ tinh</label>
+                <small id="mapLoadStatus" style="display:block;color:var(--muted);margin-top:2px"></small>
                 <label><input type="checkbox" id="chkWind"> Gió / ECM</label>
             </div>
         </div>
@@ -274,9 +410,9 @@
                 <div class="stick-keys">W/S Ga · A/D Xoay</div>
             </div>
             <div class="stick-box">
-                <div class="lbl">CẦN PHẢI</div>
+                <div class="lbl">CẦN PHẢI · theo mũi</div>
                 <div class="stick"><div class="stick-dot" id="dotR"></div></div>
-                <div class="stick-keys">↑↓ Tiến/Lùi · ←→ Nghiêng</div>
+                <div class="stick-keys">↑ Tiến mũi · ↓ Lùi · ←→ Sang trái/phải</div>
             </div>
         </div>
 
@@ -288,19 +424,42 @@
 
         <div id="companyHud">Đông A Tech</div>
         <div id="companyFooter">Công Ty TNHH Công Nghệ Đông A</div>
+        <div id="actionToast" class="hidden" aria-live="polite"></div>
+
+        <div id="finishOverlay" class="hidden">
+            <div class="finish-box">
+                <button type="button" class="panel-close" id="btnFinishClose" title="Về menu chính" aria-label="Về menu">×</button>
+                <h2>✓ Hoàn thành nhiệm vụ</h2>
+                <div class="finish-time" id="finishTime">00:00.0</div>
+                <div class="finish-actions">
+                    <button type="button" class="btn-menu" id="btnFinishMenu">← Về menu chính</button>
+                    <button type="button" class="btn-retry" id="btnFinishRetry">↺ Bay lại</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="touchControls">
+            <div class="touch-zone touch-left" id="touchLeft">
+                <div class="touch-knob" id="knobLeft"></div>
+                <span class="touch-label">Ga · Xoay</span>
+            </div>
+            <div class="touch-zone touch-right" id="touchRight">
+                <div class="touch-knob" id="knobRight"></div>
+                <span class="touch-label">Tiến · Nghiêng</span>
+            </div>
+        </div>
     </div>
 
     <!-- Menu chính -->
     <div id="menuOverlay" class="overlay">
         <div class="panel">
-            <span class="badge">BQP VN · Huấn luyện UAV 2D</span>
-            <h1>Huấn luyện UAV 2D — Kịch bản tác chiến</h1>
-            <p>Mô phỏng <strong>huấn luyện VLOS</strong> cho cán bộ, chiến sĩ: trinh sát tình hình, phản ứng UAV bay thấp, bảo vệ mục tiêu trọng yếu, né vùng đe dọa. Bám tư tưởng <em>phát hiện sớm · cảnh báo nhanh · chế áp kịp thời</em>.</p>
+            <button type="button" class="panel-close hidden" id="btnMenuClose" title="Tiếp tục bay" aria-label="Tiếp tục bay">×</button>
+            <span class="badge">BQP VN · Huấn luyện UAV tác chiến</span>
+            <h1>HL UAV tác chiến — Kịch bản theo đơn vị</h1>
+            <p>Mô phỏng <strong>VLOS tác chiến</strong>: trinh sát · chống UAV bay thấp · bảo vệ mục tiêu · liên hợp đa phương. Đe dọa <strong>m/ph hướng Đ</strong> · yểm trợ <strong>◆US ◆RU m/ph</strong>.</p>
             <p style="font-size:0.82rem;color:#6b7280">
-                🔴 Vùng đỏ = đe dọa UAV mô phỏng (hướng <strong>Đ</strong>) ·
-                🟢 Căn cứ VN / điểm yểm trợ ·
-                🔵 MTTQ = mục tiêu cần bảo vệ ·
-                ≋ Biển = kịch bản hải quân
+                🔴 Vùng đỏ = UAV địch m/ph · 🟢 🇻🇳 = ta ·
+                🔵 MTTQ · ≋ Biển Đông
             </p>
 
             <div class="features-box">
@@ -326,10 +485,7 @@
                 </svg>
             </div>
 
-            <h2>Chọn khóa huấn luyện</h2>
-            <p style="font-size:0.8rem;color:#6b7280;margin:0 0 6px">
-                Phân theo quân chủng: Cơ sở · Bộ đội · PK-KQ · Hải quân · Liên hợp (yểm trợ ◆ Mỹ/Nga mô phỏng)
-            </p>
+            <h2>Chọn kịch bản</h2>
             <div class="levels" id="levelList"></div>
 
             <h2>Cấp độ</h2>
@@ -339,6 +495,7 @@
                 <button type="button" data-skill="nang-cao">Nâng cao</button>
             </div>
 
+            <button type="button" class="secondary hidden" id="btnMenuResume">← Tiếp tục bay</button>
             <button type="button" class="primary" id="btnStart">▶ Bắt đầu bay</button>
             <p class="company-menu" id="companyMenu">Công Ty TNHH Công Nghệ Đông A</p>
         </div>
@@ -346,27 +503,31 @@
 
     <div id="helpOverlay" class="overlay hidden">
         <div class="panel">
+            <button type="button" class="panel-close" id="btnHelpX" title="Đóng" aria-label="Đóng">×</button>
             <h1>🎮 Hướng dẫn điều khiển</h1>
             <p><strong>Mode 2</strong> (chuẩn radio VLOS):</p>
             <ul>
                 <li><strong>Cần trái:</strong> W/S = Ga · A/D = Xoay (Yaw)</li>
-                <li><strong>Cần phải:</strong> ↑↓ = Tiến/Lùi · ←→ = Nghiêng (Roll)</li>
+                <li><strong>Cần phải:</strong> ↑↓ = Tiến/Lùi <em>theo hướng mũi</em> · ←→ = Sang trái/phải (không phải theo màn hình)</li>
+                <li><strong>Mũi drone:</strong> tam giác trắng + cánh cam phía trước · đuôi thanh đen · la bàn góc sân (kim xanh = mũi)</li>
                 <li><strong>Tay cầm Xbox/PS:</strong> cần trái + phải map tương tự</li>
-                <li><strong>R</strong> = Reset · <strong>H</strong> = Trợ giúp</li>
+                <li><strong>📱 Mobile / tablet:</strong> cần ảo kép góc dưới màn hình (Ga·Xoay trái · Tiến·Nghiêng phải)</li>
+                <li><strong>R</strong> = Reset · <strong>H</strong> = Trợ giúp · sidebar ↺ trên mobile</li>
             </ul>
-            <p>Bay qua các <strong>điểm QS/trinh sát</strong> (vòng trắng). Tránh <strong>vùng đỏ</strong> (UAV địch mô phỏng). Hạ cánh tại <strong>H</strong>.</p>
-            <h2>Quân chủng &amp; tác chiến liên hợp</h2>
+            <p>Bay qua <strong>điểm QS</strong> (vòng trắng). Tránh <strong>vùng đỏ</strong> (UAV m/ph). Hạ cánh tại <strong>H</strong>.</p>
+            <h2>Nhóm kịch bản (BQP)</h2>
             <ul>
-                <li><strong>🇻🇳 Bộ đội:</strong> trinh sát VLOS, bảo vệ MTTQ, né bầy đàn UAV</li>
-                <li><strong>✈️ PK-KQ:</strong> hiệp đồng radar VQ2, chế áp UAV bay thấp (Trung đoàn 228/280 mô phỏng)</li>
-                <li><strong>⚓ Hải quân:</strong> tuần tra ven biển, bảo vệ cảng/tàu — vùng ≋ biển</li>
-                <li><strong>🤝 Liên hợp:</strong> VN chủ trì + điểm yểm trợ <strong>◆</strong> (Mỹ/Nga mô phỏng huấn luyện liên minh, không phải cờ quốc gia thật)</li>
+                <li><strong>🎓 Cơ sở HL:</strong> VLOS · hạ cánh</li>
+                <li><strong>🛡️ QB Biên phòng:</strong> tuần biên · UAV xâm nhập</li>
+                <li><strong>✈️ QA PK-KQ:</strong> VQ2 · Tr.228 · chống bay thấp</li>
+                <li><strong>⚓ HQ · CSB:</strong> cảng · tàu · đường biển</li>
+                <li><strong>🗺️ Quân khu:</strong> QK4 KD Vinh · QK5 KV Đà Nẵng · KT Thủ đô</li>
             </ul>
-            <p style="font-size:0.82rem;color:#6b7280">◆ = điểm yểm trợ liên minh (mô phỏng). Nhiệm vụ huấn luyện phòng thủ Tổ quốc.</p>
+            <p style="font-size:0.82rem;color:#6b7280">m/ph = mô phỏng huấn luyện · UAV địch hướng Đông / biển Đông.</p>
             <button type="button" class="primary" id="btnHelpClose">Đã hiểu</button>
         </div>
     </div>
 </div>
-<script type="module" src="./game.js?v=20260531"></script>
+<script type="module" src="./game.js?v=20260531b"></script>
 </body>
 </html>
