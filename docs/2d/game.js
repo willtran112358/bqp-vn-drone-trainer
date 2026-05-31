@@ -490,7 +490,8 @@ function buildLevelList() {
     el.innerHTML = '';
     BRANCH_ORDER.forEach((branchId) => {
         const br = BRANCHES[branchId];
-        const levels = LEVELS.map((lv, i) => ({ lv, i })).filter(({ lv }) => lv.branch === branchId);
+        if (!br || br.hidden) return;
+        const levels = LEVELS.map((lv, i) => ({ lv, i })).filter(({ lv }) => lv.branch === branchId && !lv.hidden);
         if (!levels.length) return;
         const hdr = document.createElement('div');
         hdr.className = 'branch-header';

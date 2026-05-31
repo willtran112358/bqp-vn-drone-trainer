@@ -176,8 +176,25 @@
 
         .levels { display: flex; flex-direction: column; gap: 6px; margin: 10px 0; }
         .levels label {
-            display: flex; gap: 10px; padding: 10px 12px;
+            display: flex; gap: 10px; padding: 10px 14px;
             border: 1px solid #e5e7eb; border-radius: 8px; cursor: pointer;
+            align-items: flex-start; overflow: visible;
+        }
+        .levels label input[type="radio"] {
+            flex-shrink: 0; margin-top: 4px;
+        }
+        .levels label > span {
+            flex: 1; min-width: 0;
+            line-height: 1.5; overflow: visible;
+        }
+        .levels label strong {
+            display: block; margin-bottom: 3px;
+            line-height: 1.35;
+        }
+        .levels label small {
+            display: block; font-size: 0.8rem; color: #6b7280;
+            line-height: 1.45; overflow-wrap: break-word;
+            word-break: normal; padding-right: 2px;
         }
         .levels label:hover, .levels label:has(input:checked) {
             border-color: var(--accent); background: #eff6ff;
@@ -361,8 +378,8 @@
             <h1>HL UAV tác chiến — Kịch bản theo đơn vị</h1>
             <p>Mô phỏng <strong>VLOS tác chiến</strong>: trinh sát · chống UAV bay thấp · bảo vệ mục tiêu · liên hợp đa phương. Đe dọa <strong>m/ph hướng Đ</strong> · yểm trợ <strong>◆US ◆RU m/ph</strong>.</p>
             <p style="font-size:0.82rem;color:#6b7280">
-                🔴 Đ m/ph = UAV địch mô phỏng · 🟢 🇻🇳 = ta · ◆ = đồng minh m/ph ·
-                🔵 MTTQ · ≋ Biển
+                🔴 Vùng đỏ = UAV địch m/ph · 🟢 🇻🇳 = ta ·
+                🔵 MTTQ · ≋ Biển Đông
             </p>
 
             <div class="features-box">
@@ -421,11 +438,10 @@
                 <li><strong>🎓 Cơ sở HL:</strong> VLOS · hạ cánh</li>
                 <li><strong>🛡️ QB Biên phòng:</strong> tuần biên · UAV xâm nhập</li>
                 <li><strong>✈️ QA PK-KQ:</strong> VQ2 · Tr.228 · chống bay thấp</li>
-                <li><strong>⚓ QH · QC CSB:</strong> cảng · tàu · đường biển</li>
-                <li><strong>🗺️ Quân khu:</strong> QK4 KD · QK5 KV · bảo vệ vùng</li>
-                <li><strong>🤝 Liên hợp:</strong> VN + ◆US/◆RU m/ph · phòng UAV tổng hợp</li>
+                <li><strong>⚓ HQ · CSB:</strong> cảng · tàu · đường biển</li>
+                <li><strong>🗺️ Quân khu:</strong> QK4 KD Vinh · QK5 KV Đà Nẵng · KT Thủ đô</li>
             </ul>
-            <p style="font-size:0.82rem;color:#6b7280">m/ph = mô phỏng huấn luyện · ◆ = yểm trợ đồng minh m/ph · không phải cờ quốc gia thật.</p>
+            <p style="font-size:0.82rem;color:#6b7280">m/ph = mô phỏng huấn luyện · UAV địch hướng Đông / biển Đông.</p>
             <button type="button" class="primary" id="btnHelpClose">Đã hiểu</button>
         </div>
     </div>
