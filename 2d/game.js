@@ -1,8 +1,10 @@
-import { ARENA, LEVELS, SKILLS, THREAT_BEARING } from './levels.js';
+import { ARENA, LEVELS, SKILLS, THREAT_BEARING, BRANCHES, COMPANY, FEATURES } from './levels.js';
 import { readInputs, consumeKey, lastInputs } from './input.js';
+import { initTouchControls, setTouchControlsVisible } from './touch-controls.js';
 import {
     updatePropAnimation, drawDroneTopDown, drawHelipad, drawCheckpointRing, drawThreatDrone,
 } from './drone-sprite.js';
+import { drawRealisticGround, drawCompassRose } from './terrain.js';
 
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
@@ -118,6 +120,8 @@ function updateStickHud() {
 function updateHud() {
     document.getElementById('statTime').textContent = formatTime(elapsed);
     document.getElementById('statSkill').textContent = skill().name;
+    const br = BRANCHES[level().branch];
+    document.getElementById('statBranch').textContent = br ? `${br.icon} ${br.name}` : '—';
     const total = level().checkpoints.length;
     document.getElementById('statCp').textContent = total ? `${Math.min(cpIndex, total)}/${total}` : '—';
     document.getElementById('altFill').style.height = `${drone.alt * 100}%`;
@@ -238,14 +242,13 @@ function formatTime(t) {
 }
 
 function drawArenaBackground() {
-    ctx.fillStyle = '#3d3830';
+    ctx.fillStyle = '#2a2620';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    ctx.fillStyle = '#b8a88a';
-    ctx.fillRect(arenaRect.x, arenaRect.y, arenaRect.w, arenaRect.h);
+    drawRealisticGround(ctx, arenaRect.x, arenaRect.y, arenaRect.w, arenaRect.h, scale);
 
     if (showGrid) {
-        ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+        ctx.strokeStyle = 'rgba(255,255,255,0.22)';
         ctx.lineWidth = 1;
         for (let x = 0; x <= ARENA.w; x += 40) {
             const [sx] = worldToScreen(x, 0);
@@ -263,19 +266,40 @@ function drawArenaBackground() {
         }
     }
 
-    // La bàn — hướng Đ (đe dọa mô phỏng)
-    ctx.fillStyle = 'rgba(220,38,38,0.75)';
+    // La bàn sân — hướng Đ (đe dọa mô phỏng)
+    ctx.fillStyle = 'rgba(220,38,38,0.85)';
     ctx.font = `bold ${11 * scale}px Segoe UI, sans-serif`;
     ctx.textAlign = 'center';
-    ctx.fillText(`↑ Bắc`, offsetX + arenaRect.w / 2, arenaRect.y - 6);
-    ctx.fillText(`${THREAT_BEARING} →`, offsetX + arenaRect.w - 8, arenaRect.y + arenaRect.h / 2);
+    ctx.textBaseline = 'middle';
+    ctx.fillText('↑ Bắc', offsetX + arenaRect.w / 2, arenaRect.y - 8);
+    ctx.textAlign = 'left';
+    ctx.fillText(`${THREAT_BEARING} →`, offsetX + arenaRect.w - 28, arenaRect.y + arenaRect.h / 2);
 
-    ctx.strokeStyle = 'rgba(255,255,255,0.9)';
-    ctx.lineWidth = 5 * scale;
+    ctx.strokeStyle = 'rgba(255,255,255,0.75)';
+    ctx.lineWidth = 4 * scale;
     ctx.strokeRect(
         offsetX + ARENA.margin * scale, offsetY + ARENA.margin * scale,
         (ARENA.w - 2 * ARENA.margin) * scale, (ARENA.h - 2 * ARENA.margin) * scale
     );
+}
+
+function drawSeaZone() {
+    const sea = level().seaZone;
+    if (!sea) return;
+    const [sx, sy] = worldToScreen(sea.x, sea.y);
+    ctx.save();
+    ctx.fillStyle = 'rgba(14,116,144,0.35)';
+    ctx.fillRect(sx, sy, sea.w * scale, sea.h * scale);
+    ctx.strokeStyle = 'rgba(56,189,248,0.5)';
+    ctx.lineWidth = 2 * scale;
+    ctx.setLineDash([10 * scale, 6 * scale]);
+    ctx.strokeRect(sx, sy, sea.w * scale, sea.h * scale);
+    ctx.setLineDash([]);
+    ctx.fillStyle = 'rgba(3,105,161,0.85)';
+    ctx.font = `bold ${11 * scale}px Segoe UI, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText('≋ BIỂN ≋', sx + sea.w * scale / 2, sy + sea.h * scale / 2);
+    ctx.restore();
 }
 
 function drawThreatZones() {
@@ -414,7 +438,8 @@ function drawWindVectors() {
 function drawDrone() {
     const [sx, sy] = worldToScreen(drone.x, drone.y);
     const throttle = lastInputs.throttle * 0.5 + 0.5;
-    drawDroneTopDown(ctx, sx, sy, drone.angle + Math.PI / 2, scale, drone.alt, throttle);
+    drawDroneTopDown(ctx, sx, sy, drone.angle, scale, drone.alt, throttle);
+    drawCompassRose(ctx, offsetX + 34 * scale, offsetY + 34 * scale, 22 * scale, scale, drone.angle);
 }
 
 function drawFinishBanner() {
@@ -431,6 +456,7 @@ function drawFinishBanner() {
 
 function render() {
     drawArenaBackground();
+    drawSeaZone();
     drawProtectZone();
     drawThreatZones();
     drawAllyPosts();
@@ -454,7 +480,18 @@ function loop(now) {
 
 function buildLevelList() {
     const el = document.getElementById('levelList');
+    el.innerHTML = '';
+    let lastBranch = null;
     LEVELS.forEach((lv, i) => {
+        if (lv.branch !== lastBranch) {
+            lastBranch = lv.branch;
+            const br = BRANCHES[lv.branch];
+            const hdr = document.createElement('div');
+            hdr.className = 'branch-header';
+            hdr.style.cssText = `font-size:0.78rem;font-weight:700;color:${br?.color ?? '#374151'};margin:10px 0 4px;padding-left:2px`;
+            hdr.textContent = `${br?.icon ?? '•'} ${br?.name ?? lv.branch}`;
+            el.appendChild(hdr);
+        }
         const label = document.createElement('label');
         label.innerHTML = `<input type="radio" name="level" value="${i}" ${i === 0 ? 'checked' : ''}>
             <span><strong>${lv.name}</strong><br><small>${lv.desc}</small></span>`;
@@ -462,9 +499,18 @@ function buildLevelList() {
     });
 }
 
+function buildFeatureList() {
+    const el = document.getElementById('featureList');
+    if (!el) return;
+    el.innerHTML = FEATURES.map(f =>
+        `<li><strong>${f.name}</strong> — ${f.desc}</li>`
+    ).join('');
+}
+
 function showMenu(show) {
     document.getElementById('menuOverlay').classList.toggle('hidden', !show);
     document.getElementById('gameUi').classList.toggle('hidden', show);
+    setTouchControlsVisible(!show);
     running = !show;
     if (!show) resetDrone();
 }
@@ -511,4 +557,9 @@ document.getElementById('windSlider').addEventListener('input', (e) => {
 });
 
 buildLevelList();
+buildFeatureList();
+initTouchControls();
+document.getElementById('companyFooter').textContent = COMPANY.name;
+document.getElementById('companyMenu').textContent = COMPANY.name;
+document.getElementById('companyHud').textContent = COMPANY.short;
 requestAnimationFrame(loop);
