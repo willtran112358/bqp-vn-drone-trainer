@@ -32,20 +32,33 @@ const drone = { x: 400, y: 300, angle: 0, vx: 0, vy: 0, alt: 0.5 };
 let scale = 1, offsetX = 0, offsetY = 0;
 let arenaRect = { x: 0, y: 0, w: 0, h: 0 };
 
+function isMobileLayout() {
+    return window.matchMedia('(max-width: 768px), (hover: none) and (pointer: coarse)').matches;
+}
+
 function resize() {
-    const sidebar = 52;
-    const topPad = 8;
-    const rightPad = 8;
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    const availW = canvas.width - sidebar - rightPad * 2;
-    const availH = canvas.height - topPad * 2;
-    scale = Math.min(availW / ARENA.w, availH / ARENA.h) * 0.96;
-    offsetX = sidebar + (availW - ARENA.w * scale) / 2;
-    offsetY = topPad + (availH - ARENA.h * scale) / 2;
+    const mobile = isMobileLayout();
+    const sidebar = mobile ? 44 : 52;
+    const topPad = mobile ? 92 : 8;
+    const bottomPad = mobile ? 138 : 8;
+    const rightPad = mobile ? 46 : 8;
+
+    const vw = window.visualViewport?.width ?? window.innerWidth;
+    const vh = window.visualViewport?.height ?? window.innerHeight;
+
+    canvas.width = vw;
+    canvas.height = vh;
+
+    const availW = vw - sidebar - rightPad;
+    const availH = vh - topPad - bottomPad;
+    scale = Math.min(availW / ARENA.w, availH / ARENA.h) * (mobile ? 0.99 : 0.96);
+    offsetX = sidebar + Math.max(0, (availW - ARENA.w * scale) / 2);
+    offsetY = topPad + Math.max(0, (availH - ARENA.h * scale) / 2);
     arenaRect = { x: offsetX, y: offsetY, w: ARENA.w * scale, h: ARENA.h * scale };
 }
 window.addEventListener('resize', resize);
+window.visualViewport?.addEventListener('resize', resize);
+window.visualViewport?.addEventListener('scroll', resize);
 resize();
 
 function worldToScreen(x, y) {

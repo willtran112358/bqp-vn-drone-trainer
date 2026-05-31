@@ -20,8 +20,9 @@
             margin: 0; overflow: hidden;
             font-family: 'Segoe UI', system-ui, sans-serif;
             background: #3d3830; color: var(--text);
+            height: 100dvh;
         }
-        #wrap { position: relative; width: 100vw; height: 100vh; }
+        #wrap { position: relative; width: 100vw; height: 100dvh; }
 
         canvas {
             display: block;
@@ -318,17 +319,147 @@
         }
 
         @media (hover: none) and (pointer: coarse), (max-width: 768px) {
+            :root {
+                --sidebar-w: 44px;
+                --hud-top: 92px;
+                --hud-bottom: 138px;
+                --alt-w: 46px;
+            }
+
             #stickPanel { display: none; }
-            #topRight { top: 8px; right: 8px; gap: 6px; }
-            #topRight .ui-card { padding: 6px 8px; font-size: 0.7rem; }
-            #windDial { width: 48px; height: 48px; }
-            #objective { max-width: 210px; padding: 6px 10px; left: 58px; top: 8px; }
-            #objective .text { font-size: 0.85rem; }
-            #stats { left: 58px; bottom: 8px; padding: 6px 10px; font-size: 0.68rem; }
-            #altPanel { right: 8px; bottom: 160px; padding: 6px 8px; }
-            #altBar { height: 80px; }
-            #companyFooter { font-size: 0.58rem; right: 8px; bottom: 4px; max-width: 42vw; }
-            #companyHud { left: 58px; font-size: 0.58rem; }
+            #companyHud, #companyFooter { display: none; }
+
+            canvas {
+                margin-left: var(--sidebar-w);
+                width: calc(100% - var(--sidebar-w));
+                height: 100dvh;
+            }
+            #sidebar {
+                width: var(--sidebar-w);
+                padding: 8px 0;
+                gap: 4px;
+            }
+            #sidebar button {
+                width: 34px; height: 34px; font-size: 16px;
+            }
+
+            /* Mục tiêu — full width hàng trên */
+            #objective {
+                left: calc(var(--sidebar-w) + 4px);
+                right: calc(var(--alt-w) + 6px);
+                top: 4px;
+                max-width: none;
+                padding: 5px 26px 5px 8px;
+            }
+            #objective .title { display: none; }
+            #objective .text {
+                font-size: 0.78rem;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            #objective .sub {
+                font-size: 0.65rem;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            #objExit { width: 22px; height: 22px; font-size: 0.85rem; top: 4px; right: 4px; }
+
+            /* Ẩn Wind card — dùng nút 💨 sidebar */
+            #windCard { display: none; }
+
+            /* Guide View — hàng dưới objective, grid 2 cột */
+            #topRight {
+                top: 46px;
+                left: calc(var(--sidebar-w) + 4px);
+                right: calc(var(--alt-w) + 6px);
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0;
+            }
+            #guidePanel {
+                padding: 4px 8px;
+                font-size: 0.62rem;
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                column-gap: 6px;
+            }
+            #guidePanel h4 {
+                grid-column: 1 / -1;
+                margin: 0 0 2px;
+                font-size: 0.6rem;
+            }
+            #guidePanel label {
+                margin: 1px 0;
+                gap: 4px;
+                font-size: 0.62rem;
+            }
+            #mapLoadStatus {
+                grid-column: 1 / -1;
+                font-size: 0.58rem !important;
+                margin-top: 0 !important;
+            }
+
+            /* Stats — giữa dưới, trên cần ảo */
+            #stats {
+                left: 50%;
+                transform: translateX(-50%);
+                bottom: calc(var(--hud-bottom) - 4px);
+                padding: 4px 10px;
+                font-size: 0.62rem;
+                line-height: 1.35;
+                text-align: center;
+                max-width: calc(100vw - var(--sidebar-w) - var(--alt-w) - 24px);
+            }
+            #stats br { display: none; }
+            #stats .val { font-size: 0.62rem; }
+            #statBranch { display: none; }
+
+            /* ALT — cạnh phải, giữa màn */
+            #altPanel {
+                right: 4px;
+                top: 50%;
+                bottom: auto;
+                transform: translateY(-50%);
+                padding: 5px 6px;
+            }
+            #altPanel h4 { margin: 0 0 4px; font-size: 0.6rem; }
+            #altBar { width: 16px; height: 72px; }
+            #altVal { font-size: 0.6rem; margin-top: 4px; }
+
+            /* Cần ảo — góc dưới, không đè stats */
+            .touch-zone {
+                bottom: 10px;
+                width: min(112px, 30vw);
+                height: min(112px, 30vw);
+            }
+            .touch-left { left: calc(var(--sidebar-w) + 4px); }
+            .touch-right { right: 4px; }
+            .touch-label { font-size: 0.52rem; bottom: -12px; }
+
+            #actionToast {
+                bottom: calc(var(--hud-bottom) + 6px);
+                left: calc(var(--sidebar-w) + 50%);
+                transform: translateX(calc(-50% - var(--sidebar-w) / 2)) translateY(12px);
+                font-size: 0.72rem;
+                padding: 6px 10px;
+                max-width: calc(100vw - var(--sidebar-w) - var(--alt-w) - 20px);
+            }
+            #actionToast.show {
+                transform: translateX(calc(-50% - var(--sidebar-w) / 2)) translateY(0);
+            }
+
+            /* Menu overlay */
+            .overlay { padding: 10px; align-items: flex-start; padding-top: max(10px, env(safe-area-inset-top)); }
+            .panel {
+                padding: 16px 18px;
+                max-height: calc(100dvh - 20px);
+                border-radius: 10px;
+            }
+            .panel h1 { font-size: 1.05rem; }
+            .levels label { padding: 8px 10px; }
+            .levels label small { font-size: 0.74rem; }
         }
 
         .hidden { display: none !important; }
@@ -349,9 +480,6 @@
         #actionToast.show {
             opacity: 1;
             transform: translateX(-50%) translateY(0);
-        }
-        @media (hover: none) and (pointer: coarse), (max-width: 768px) {
-            #actionToast { bottom: 168px; font-size: 0.76rem; padding: 7px 12px; }
         }
     </style>
 </head>
@@ -378,7 +506,7 @@
         </div>
 
         <div id="topRight">
-            <div class="ui-card">
+            <div class="ui-card" id="windCard">
                 <h4>Wind</h4>
                 <div id="windDial"><div id="windDot"></div></div>
                 <div id="windVal">0 m/s</div>
@@ -397,9 +525,12 @@
         </div>
 
         <div id="stats">
-            ⏱ <span class="val" id="statTime">00:00.0</span><br>
-            📍 CP: <span class="val" id="statCp">—</span> ·
-            ⚙ <span class="val" id="statSkill">—</span><br>
+            ⏱ <span class="val" id="statTime">00:00.0</span>
+            <span class="stat-sep"> · </span>
+            📍 CP: <span class="val" id="statCp">—</span>
+            <span class="stat-sep"> · </span>
+            ⚙ <span class="val" id="statSkill">—</span>
+            <br>
             <span class="val" id="statBranch" style="font-size:0.7rem">—</span>
         </div>
 
@@ -528,6 +659,6 @@
         </div>
     </div>
 </div>
-<script type="module" src="./game.js?v=20260531b"></script>
+<script type="module" src="./game.js?v=20260531c"></script>
 </body>
 </html>
