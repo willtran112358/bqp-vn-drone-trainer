@@ -53,9 +53,10 @@ export function drawRealisticGround(ctx, x, y, w, h, scale) {
     ctx.fillRect(x, y, w, h);
     ctx.globalAlpha = 0.35;
     ctx.fillStyle = dirtPattern;
+    ctx.save();
     ctx.translate(17, 23);
     ctx.fillRect(x - 17, y - 23, w, h);
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.restore();
     ctx.globalAlpha = 1;
 
     // Vignette nhẹ — ánh sáng từ góc trên-trái
@@ -77,18 +78,16 @@ export function drawRealisticGround(ctx, x, y, w, h, scale) {
     ctx.restore();
 }
 
-/** Nền sân: luôn vẽ procedural; ảnh vệ tinh phủ lên khi đã tải xong */
+/** Nền sân: vệ tinh HOẶC procedural — không chồng để toggle sạch */
 export function drawArenaGround(ctx, x, y, w, h, scale, useMap) {
-    drawRealisticGround(ctx, x, y, w, h, scale);
-    if (!useMap || !isMapReady()) return false;
-    const ok = drawMapBackground(ctx, x, y, w, h);
-    if (ok) {
-        ctx.save();
-        ctx.fillStyle = 'rgba(20,30,20,0.1)';
-        ctx.fillRect(x, y, w, h);
-        ctx.restore();
+    const mapOn = useMap && isMapReady();
+    if (mapOn) {
+        const ok = drawMapBackground(ctx, x, y, w, h);
+        if (!ok) drawRealisticGround(ctx, x, y, w, h, scale);
+        return ok;
     }
-    return ok;
+    drawRealisticGround(ctx, x, y, w, h, scale);
+    return false;
 }
 
 export function drawMapAttribution(ctx, x, y, w, scale) {

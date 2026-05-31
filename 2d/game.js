@@ -442,10 +442,37 @@ function drawWindVectors() {
     }
 }
 
+function resetCanvasState() {
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.setLineDash([]);
+}
+
 function drawDrone() {
     const [sx, sy] = worldToScreen(drone.x, drone.y);
     const throttle = lastInputs.throttle * 0.5 + 0.5;
-    drawDroneTopDown(ctx, sx, sy, drone.angle, scale, drone.alt, throttle);
+    const onMap = showMapTiles && isMapReady();
+
+    ctx.save();
+    if (onMap) {
+        const r = 20 * scale;
+        ctx.fillStyle = 'rgba(249,115,22,0.45)';
+        ctx.strokeStyle = '#ea580c';
+        ctx.lineWidth = 3 * scale;
+        ctx.beginPath();
+        ctx.arc(sx, sy, r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 1.5 * scale;
+        ctx.beginPath();
+        ctx.moveTo(sx, sy);
+        ctx.lineTo(sx + Math.cos(drone.angle) * r * 1.4, sy + Math.sin(drone.angle) * r * 1.4);
+        ctx.stroke();
+    }
+    drawDroneTopDown(ctx, sx, sy, drone.angle, scale, drone.alt, throttle, onMap);
+    ctx.restore();
     drawCompassRose(ctx, offsetX + 34 * scale, offsetY + 34 * scale, 22 * scale, scale, drone.angle);
 }
 
@@ -462,6 +489,7 @@ function drawFinishBanner() {
 }
 
 function render() {
+    resetCanvasState();
     drawArenaBackground();
     drawSeaZone();
     drawProtectZone();
@@ -573,6 +601,7 @@ function setMapTiles(on) {
     if (!on) {
         setMapStatus('');
         if (chk) chk.disabled = false;
+        resetCanvasState();
         return;
     }
     if (isMapReady()) {
