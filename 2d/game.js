@@ -5,7 +5,7 @@ import {
     updatePropAnimation, drawDroneTopDown, drawHelipad, drawCheckpointRing, drawThreatDrone,
 } from './drone-sprite.js';
 import { drawCompassRose, drawArenaGround, drawMapAttribution } from './terrain.js';
-import { preloadMapTiles, isMapReady, getMapLoadError } from './map-tiles.js';
+import { preloadMapTiles, isMapReady, isMapLoading, getMapLoadError } from './map-tiles.js';
 
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
@@ -561,27 +561,43 @@ document.getElementById('btnWind').addEventListener('click', () => {
 document.getElementById('chkPath').addEventListener('change', (e) => { showPathGuide = e.target.checked; });
 document.getElementById('chkGrid').addEventListener('change', (e) => { showGrid = e.target.checked; });
 
-async function setMapTiles(on) {
-    showMapTiles = on;
+function setMapStatus(text) {
     const status = document.getElementById('mapLoadStatus');
+    if (status) status.textContent = text;
+}
+
+function setMapTiles(on) {
+    const chk = document.getElementById('chkMap');
+    showMapTiles = on;
     if (!on) {
-        if (status) status.textContent = '';
+        setMapStatus('');
+        if (chk) chk.disabled = false;
         return;
     }
     if (isMapReady()) {
-        if (status) status.textContent = '✓ Bản đồ';
+        setMapStatus('✓ Vệ tinh');
         return;
     }
-    if (mapLoading) return;
+    if (mapLoading || isMapLoading()) return;
+
     mapLoading = true;
-    if (status) status.textContent = '⏳ Đang tải…';
-    await preloadMapTiles();
-    mapLoading = false;
-    if (status) {
-        status.textContent = isMapReady()
-            ? '✓ Bản đồ'
-            : (getMapLoadError() ? '✗ Lỗi tải' : '');
-    }
+    if (chk) chk.disabled = true;
+    setMapStatus('⏳ Đang tải…');
+
+    preloadMapTiles().then(() => {
+        mapLoading = false;
+        if (chk) chk.disabled = false;
+        if (!showMapTiles) {
+            setMapStatus('');
+            return;
+        }
+        if (isMapReady()) setMapStatus('✓ Vệ tinh');
+        else {
+            setMapStatus(getMapLoadError() ? '✗ Lỗi — thử lại' : '');
+            if (chk) chk.checked = false;
+            showMapTiles = false;
+        }
+    });
 }
 
 document.getElementById('chkMap')?.addEventListener('change', (e) => { setMapTiles(e.target.checked); });

@@ -12,7 +12,7 @@ function noiseTile(size, base, variance, count) {
     const g = c.getContext('2d');
     g.fillStyle = base;
     g.fillRect(0, 0, size, size);
-    for (let i = 0; i < count; i++) {
+    for (let i = 0; i < Math.min(count, 180); i++) {
         const r = Math.random();
         const hue = 28 + r * 18;
         const sat = 18 + r * 22;
@@ -77,20 +77,18 @@ export function drawRealisticGround(ctx, x, y, w, h, scale) {
     ctx.restore();
 }
 
-/** Nền sân: bản đồ thật (nếu bật & đã tải) hoặc procedural */
+/** Nền sân: luôn vẽ procedural; ảnh vệ tinh phủ lên khi đã tải xong */
 export function drawArenaGround(ctx, x, y, w, h, scale, useMap) {
-    let usedMap = false;
-    if (useMap && isMapReady()) {
-        usedMap = drawMapBackground(ctx, x, y, w, h);
-        if (usedMap) {
-            ctx.save();
-            ctx.fillStyle = 'rgba(20,30,20,0.12)';
-            ctx.fillRect(x, y, w, h);
-            ctx.restore();
-        }
+    drawRealisticGround(ctx, x, y, w, h, scale);
+    if (!useMap || !isMapReady()) return false;
+    const ok = drawMapBackground(ctx, x, y, w, h);
+    if (ok) {
+        ctx.save();
+        ctx.fillStyle = 'rgba(20,30,20,0.1)';
+        ctx.fillRect(x, y, w, h);
+        ctx.restore();
     }
-    if (!usedMap) drawRealisticGround(ctx, x, y, w, h, scale);
-    return usedMap;
+    return ok;
 }
 
 export function drawMapAttribution(ctx, x, y, w, scale) {
