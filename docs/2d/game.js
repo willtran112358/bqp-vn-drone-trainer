@@ -1,7 +1,7 @@
-import { ARENA, LEVELS, SKILLS } from './levels.js';
+import { ARENA, LEVELS, SKILLS, THREAT_BEARING } from './levels.js';
 import { readInputs, consumeKey, lastInputs } from './input.js';
 import {
-    updatePropAnimation, drawDroneTopDown, drawHelipad, drawCheckpointRing,
+    updatePropAnimation, drawDroneTopDown, drawHelipad, drawCheckpointRing, drawThreatDrone,
 } from './drone-sprite.js';
 
 const canvas = document.getElementById('game');
@@ -18,6 +18,8 @@ let showPathGuide = true;
 let showGrid = true;
 let windStrength = 0;
 let windAngle = 0;
+let inThreatZone = false;
+let threatPulse = 0;
 
 const drone = { x: 400, y: 300, angle: 0, vx: 0, vy: 0, alt: 0.5 };
 let scale = 1, offsetX = 0, offsetY = 0;
@@ -54,6 +56,16 @@ function resetDrone() {
     elapsed = 0;
     finished = false;
     landTimer = 0;
+    if (lv.defaultWind) {
+        windStrength = lv.defaultWind.strength;
+        windAngle = lv.defaultWind.angle;
+        document.getElementById('chkWind').checked = windStrength > 0;
+        document.getElementById('windSlider').value = Math.round(windStrength * 10);
+    } else {
+        windStrength = 0;
+        document.getElementById('chkWind').checked = false;
+        document.getElementById('windSlider').value = 0;
+    }
     updateObjective();
     updateWindDial();
 }
@@ -64,17 +76,19 @@ function level() { return LEVELS[levelIdx]; }
 function getObjectiveText() {
     const lv = level();
     const cps = lv.checkpoints;
-    if (finished) return { main: 'Hoàn thành nhiệm vụ!', sub: `Thời gian: ${formatTime(elapsed)}` };
-    if (!cps.length) return { main: 'Sân tập tự do', sub: 'Luyện ga · xoay · di chuyển trên sân' };
+    if (finished) return { main: '✓ Hoàn thành nhiệm vụ!', sub: `${formatTime(elapsed)} · ${lv.doctrine ?? ''}` };
+    if (inThreatZone) return { main: '⚠ Vùng đe dọa — thoát ngay!', sub: 'UAV địch mô phỏng · hướng ' + THREAT_BEARING };
+    if (!cps.length) return { main: lv.name, sub: lv.doctrine ?? 'Luyện ga · xoay · VLOS' };
     if (lv.landing && cpIndex >= cps.length) {
         return {
-            main: 'Hạ cánh lên bãi H',
-            sub: `Giữ ổn định ${landTimer.toFixed(1)} / ${lv.landing.holdSec}s · Ga thấp (S)`,
+            main: `Hạ cánh · ${lv.landing.label ?? 'Bãi H'}`,
+            sub: `Giữ ổn định ${landTimer.toFixed(1)}/${lv.landing.holdSec}s · S = ga thấp`,
         };
     }
+    const cp = cps[cpIndex];
     return {
-        main: `Bay qua vòng ${cpIndex + 1}`,
-        sub: `${cpIndex}/${cps.length} checkpoint`,
+        main: `→ ${cp.label ?? `Điểm ${cpIndex + 1}`}`,
+        sub: `${cpIndex}/${cps.length} · ${lv.doctrine ?? ''}`,
     };
 }
 
@@ -167,7 +181,21 @@ function update(dt) {
 
     checkCheckpoints();
     checkLanding(dt);
+    checkThreatZones();
     updateHud();
+}
+
+function checkThreatZones() {
+    inThreatZone = false;
+    for (const z of level().threatZones ?? []) {
+        if (Math.hypot(drone.x - z.x, drone.y - z.y) < z.r) {
+            inThreatZone = true;
+            drone.vx *= 0.92;
+            drone.vy *= 0.92;
+            break;
+        }
+    }
+    threatPulse += 0.05;
 }
 
 function pointInRect(x, y, r) {
@@ -235,12 +263,84 @@ function drawArenaBackground() {
         }
     }
 
+    // La bàn — hướng Đ (đe dọa mô phỏng)
+    ctx.fillStyle = 'rgba(220,38,38,0.75)';
+    ctx.font = `bold ${11 * scale}px Segoe UI, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.fillText(`↑ Bắc`, offsetX + arenaRect.w / 2, arenaRect.y - 6);
+    ctx.fillText(`${THREAT_BEARING} →`, offsetX + arenaRect.w - 8, arenaRect.y + arenaRect.h / 2);
+
     ctx.strokeStyle = 'rgba(255,255,255,0.9)';
     ctx.lineWidth = 5 * scale;
     ctx.strokeRect(
         offsetX + ARENA.margin * scale, offsetY + ARENA.margin * scale,
         (ARENA.w - 2 * ARENA.margin) * scale, (ARENA.h - 2 * ARENA.margin) * scale
     );
+}
+
+function drawThreatZones() {
+    for (const z of level().threatZones ?? []) {
+        const [sx, sy] = worldToScreen(z.x, z.y);
+        const rs = z.r * scale;
+        ctx.save();
+        ctx.fillStyle = 'rgba(220,38,38,0.18)';
+        ctx.strokeStyle = 'rgba(220,38,38,0.55)';
+        ctx.lineWidth = 2 * scale;
+        ctx.setLineDash([6 * scale, 4 * scale]);
+        ctx.beginPath();
+        ctx.arc(sx, sy, rs, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.setLineDash([]);
+        drawThreatDrone(ctx, sx, sy, scale, Math.sin(threatPulse) * 0.5 + 0.5);
+        if (z.label) {
+            ctx.fillStyle = 'rgba(220,38,38,0.9)';
+            ctx.font = `bold ${10 * scale}px Segoe UI, sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.fillText(z.label, sx, sy + rs + 12 * scale);
+        }
+        ctx.restore();
+    }
+}
+
+function drawProtectZone() {
+    const pz = level().protectZone;
+    if (!pz) return;
+    const [sx, sy] = worldToScreen(pz.x, pz.y);
+    ctx.save();
+    ctx.fillStyle = 'rgba(37,99,235,0.12)';
+    ctx.strokeStyle = 'rgba(37,99,235,0.7)';
+    ctx.lineWidth = 3 * scale;
+    ctx.beginPath();
+    ctx.arc(sx, sy, pz.r * scale, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = '#1d4ed8';
+    ctx.font = `bold ${12 * scale}px Segoe UI, sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(pz.label ?? 'MTTQ', sx, sy);
+    ctx.restore();
+}
+
+function drawAllyPosts() {
+    for (const p of level().allyPosts ?? []) {
+        const [sx, sy] = worldToScreen(p.x, p.y);
+        ctx.save();
+        ctx.fillStyle = 'rgba(34,197,94,0.2)';
+        ctx.strokeStyle = 'rgba(34,197,94,0.75)';
+        ctx.lineWidth = 2 * scale;
+        ctx.beginPath();
+        ctx.arc(sx, sy, 14 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = '#15803d';
+        ctx.font = `bold ${9 * scale}px Segoe UI, sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(p.label, sx, sy + 22 * scale);
+        ctx.restore();
+    }
 }
 
 function drawCourseMarkings() {
@@ -264,7 +364,7 @@ function drawCourseMarkings() {
 
     if (lv.landing) {
         const [lx, ly] = worldToScreen(lv.landing.x, lv.landing.y);
-        drawHelipad(ctx, lx, ly, lv.landing.r * 0.85, scale);
+        drawHelipad(ctx, lx, ly, lv.landing.r * 0.85, scale, lv.landing.label?.slice(0, 2) ?? 'H');
     }
 }
 
@@ -284,12 +384,13 @@ function drawCheckpoints() {
         const [sx, sy] = worldToScreen(cp.x, cp.y);
         const state = i < cpIndex ? 'done' : i === cpIndex ? 'active' : 'pending';
         drawCheckpointRing(ctx, sx, sy, cp.r, scale, state);
-        if (state === 'active') {
-            ctx.fillStyle = 'rgba(255,255,255,0.95)';
-            ctx.font = `bold ${13 * scale}px Segoe UI, sans-serif`;
+        const lbl = cp.label ?? String(i + 1);
+        if (state === 'active' || state === 'done') {
+            ctx.fillStyle = state === 'done' ? 'rgba(34,197,94,0.95)' : 'rgba(255,255,255,0.95)';
+            ctx.font = `bold ${11 * scale}px Segoe UI, sans-serif`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText(String(i + 1), sx, sy);
+            ctx.fillText(lbl, sx, sy);
         }
     });
 }
@@ -330,6 +431,9 @@ function drawFinishBanner() {
 
 function render() {
     drawArenaBackground();
+    drawProtectZone();
+    drawThreatZones();
+    drawAllyPosts();
     drawWindVectors();
     drawCourseMarkings();
     drawObstacles();

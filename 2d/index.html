@@ -232,9 +232,9 @@
             </div>
             <div class="ui-card" id="guidePanel">
                 <h4>Guide View</h4>
-                <label><input type="checkbox" id="chkPath" checked> Đường bay</label>
+                <label><input type="checkbox" id="chkPath" checked> Đường trinh sát</label>
                 <label><input type="checkbox" id="chkGrid" checked> Lưới sân</label>
-                <label><input type="checkbox" id="chkWind"> Bật gió</label>
+                <label><input type="checkbox" id="chkWind"> Gió / ECM</label>
             </div>
         </div>
 
@@ -267,9 +267,14 @@
     <!-- Menu chính -->
     <div id="menuOverlay" class="overlay">
         <div class="panel">
-            <span class="badge">BQP VN · Huấn luyện Drone 2D</span>
-            <h1>2D Drone Simulator</h1>
-            <p>Phong cách <strong>nhìn từ trên</strong> — luyện bay tầm nhìn (VLOS), hỗ trợ tay cầm Mode 1 & 2. Tham khảo <a href="https://store.steampowered.com/app/4299560/2D_DroneSimulator/" target="_blank" rel="noopener">2D DroneSimulator</a>.</p>
+            <span class="badge">BQP VN · Huấn luyện UAV 2D</span>
+            <h1>2D Drone Simulator — Kịch bản tác chiến</h1>
+            <p>Mô phỏng <strong>huấn luyện VLOS</strong> cho cán bộ, chiến sĩ: trinh sát tình hình, phản ứng UAV bay thấp, bảo vệ mục tiêu trọng yếu, né vùng đe dọa. Bám tư tưởng <em>phát hiện sớm · cảnh báo nhanh · chế áp kịp thời</em>.</p>
+            <p style="font-size:0.82rem;color:#6b7280">
+                🔴 Vùng đỏ = đe dọa UAV mô phỏng (hướng <strong>Đ</strong>) ·
+                🟢 Căn cứ VN / điểm yểm trợ ·
+                🔵 MTTQ = mục tiêu cần bảo vệ
+            </p>
 
             <div class="preview-sand">
                 <svg class="drone-svg" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -313,7 +318,8 @@
                 <li><strong>Tay cầm Xbox/PS:</strong> cần trái + phải map tương tự</li>
                 <li><strong>R</strong> = Reset · <strong>H</strong> = Trợ giúp</li>
             </ul>
-            <p>Bay qua các <strong>vòng trắng</strong> theo thứ tự. Vòng cam = tiếp theo. Hạ cánh tại ký hiệu <strong>H</strong>.</p>
+            <p>Bay qua các <strong>điểm QS/trinh sát</strong> (vòng trắng). Tránh <strong>vùng đỏ</strong> (UAV địch mô phỏng). Hạ cánh tại <strong>H</strong>.</p>
+            <p style="font-size:0.82rem;color:#6b7280">◆ = điểm yểm trợ liên minh (mô phỏng). Nhiệm vụ huấn luyện phòng thủ Tổ quốc.</p>
             <button type="button" class="primary" id="btnHelpClose">Đã hiểu</button>
         </div>
     </div>

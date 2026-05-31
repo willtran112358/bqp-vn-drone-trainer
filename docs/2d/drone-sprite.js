@@ -104,7 +104,7 @@ export function drawDroneTopDown(ctx, x, y, angle, scale, alt, throttle) {
     ctx.restore();
 }
 
-export function drawHelipad(ctx, x, y, r, scale) {
+export function drawHelipad(ctx, x, y, r, scale, label = 'H') {
     const rs = r * scale;
     ctx.save();
     ctx.strokeStyle = 'rgba(255,255,255,0.95)';
@@ -114,18 +114,40 @@ export function drawHelipad(ctx, x, y, r, scale) {
     ctx.arc(x, y, rs, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
-
     ctx.strokeStyle = 'rgba(255,255,255,0.85)';
     ctx.lineWidth = 2.5 * scale;
     ctx.beginPath();
     ctx.arc(x, y, rs * 0.72, 0, Math.PI * 2);
     ctx.stroke();
-
     ctx.fillStyle = 'rgba(255,255,255,0.9)';
-    ctx.font = `bold ${rs * 0.55}px Segoe UI, Arial, sans-serif`;
+    ctx.font = `bold ${Math.min(rs * 0.45, 14 * scale)}px Segoe UI, Arial, sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('H', x, y);
+    ctx.fillText(label, x, y);
+    ctx.restore();
+}
+
+export function drawThreatDrone(ctx, x, y, scale, pulse = 0) {
+    const s = 10 * scale * (1 + pulse * 0.08);
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.strokeStyle = 'rgba(220,38,38,0.85)';
+    ctx.fillStyle = 'rgba(220,38,38,0.25)';
+    ctx.lineWidth = 1.5 * scale;
+    for (const a of [0.785, 2.356, 3.927, 5.498]) {
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(Math.cos(a) * s, Math.sin(a) * s);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(Math.cos(a) * s, Math.sin(a) * s, 2.5 * scale, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+    }
+    ctx.fillStyle = '#dc2626';
+    ctx.beginPath();
+    ctx.arc(0, 0, 3 * scale, 0, Math.PI * 2);
+    ctx.fill();
     ctx.restore();
 }
 
