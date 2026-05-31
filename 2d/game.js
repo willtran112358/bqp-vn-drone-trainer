@@ -1,10 +1,11 @@
-import { ARENA, LEVELS, SKILLS, THREAT_BEARING, BRANCHES, COMPANY, FEATURES } from './levels.js';
+import { ARENA, LEVELS, SKILLS, THREAT_BEARING, BRANCHES, BRANCH_ORDER, COMPANY, FEATURES } from './levels.js';
 import { readInputs, consumeKey, lastInputs } from './input.js';
 import { initTouchControls, setTouchControlsVisible } from './touch-controls.js';
 import {
     updatePropAnimation, drawDroneTopDown, drawHelipad, drawCheckpointRing, drawThreatDrone,
 } from './drone-sprite.js';
-import { drawRealisticGround, drawCompassRose } from './terrain.js';
+import { drawCompassRose, drawArenaGround, drawMapAttribution } from './terrain.js';
+import { preloadMapTiles, isMapReady, getMapLoadError } from './map-tiles.js';
 
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
@@ -18,6 +19,8 @@ let elapsed = 0;
 let landTimer = 0;
 let showPathGuide = true;
 let showGrid = true;
+let showMapTiles = false;
+let mapLoading = false;
 let windStrength = 0;
 let windAngle = 0;
 let inThreatZone = false;
@@ -245,7 +248,7 @@ function drawArenaBackground() {
     ctx.fillStyle = '#2a2620';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    drawRealisticGround(ctx, arenaRect.x, arenaRect.y, arenaRect.w, arenaRect.h, scale);
+    drawArenaGround(ctx, arenaRect.x, arenaRect.y, arenaRect.w, arenaRect.h, scale, showMapTiles);
 
     if (showGrid) {
         ctx.strokeStyle = 'rgba(255,255,255,0.22)';
@@ -281,6 +284,10 @@ function drawArenaBackground() {
         offsetX + ARENA.margin * scale, offsetY + ARENA.margin * scale,
         (ARENA.w - 2 * ARENA.margin) * scale, (ARENA.h - 2 * ARENA.margin) * scale
     );
+
+    if (showMapTiles && isMapReady()) {
+        drawMapAttribution(ctx, arenaRect.x, arenaRect.y, arenaRect.w, scale);
+    }
 }
 
 function drawSeaZone() {
@@ -481,21 +488,29 @@ function loop(now) {
 function buildLevelList() {
     const el = document.getElementById('levelList');
     el.innerHTML = '';
-    let lastBranch = null;
-    LEVELS.forEach((lv, i) => {
-        if (lv.branch !== lastBranch) {
-            lastBranch = lv.branch;
-            const br = BRANCHES[lv.branch];
-            const hdr = document.createElement('div');
-            hdr.className = 'branch-header';
-            hdr.style.cssText = `font-size:0.78rem;font-weight:700;color:${br?.color ?? '#374151'};margin:10px 0 4px;padding-left:2px`;
-            hdr.textContent = `${br?.icon ?? '•'} ${br?.name ?? lv.branch}`;
+    BRANCH_ORDER.forEach((branchId) => {
+        const br = BRANCHES[branchId];
+        const levels = LEVELS.map((lv, i) => ({ lv, i })).filter(({ lv }) => lv.branch === branchId);
+        if (!levels.length) return;
+        const hdr = document.createElement('div');
+        hdr.className = 'branch-header';
+        hdr.style.cssText = `font-size:0.78rem;font-weight:700;color:${br?.color ?? '#374151'};margin:10px 0 2px;padding-left:2px`;
+        hdr.textContent = `${br?.icon ?? '•'} ${br?.name ?? branchId}`;
+        if (br?.hint) {
+            const sub = document.createElement('div');
+            sub.style.cssText = 'font-size:0.68rem;font-weight:400;color:#9ca3af;margin:0 0 4px 18px';
+            sub.textContent = br.hint;
+            el.appendChild(hdr);
+            el.appendChild(sub);
+        } else {
             el.appendChild(hdr);
         }
-        const label = document.createElement('label');
-        label.innerHTML = `<input type="radio" name="level" value="${i}" ${i === 0 ? 'checked' : ''}>
-            <span><strong>${lv.name}</strong><br><small>${lv.desc}</small></span>`;
-        el.appendChild(label);
+        levels.forEach(({ lv, i }) => {
+            const label = document.createElement('label');
+            label.innerHTML = `<input type="radio" name="level" value="${i}" ${i === 0 ? 'checked' : ''}>
+                <span><strong>${lv.name}</strong><br><small>${lv.desc}</small></span>`;
+            el.appendChild(label);
+        });
     });
 }
 
@@ -545,6 +560,31 @@ document.getElementById('btnWind').addEventListener('click', () => {
 
 document.getElementById('chkPath').addEventListener('change', (e) => { showPathGuide = e.target.checked; });
 document.getElementById('chkGrid').addEventListener('change', (e) => { showGrid = e.target.checked; });
+
+async function setMapTiles(on) {
+    showMapTiles = on;
+    const status = document.getElementById('mapLoadStatus');
+    if (!on) {
+        if (status) status.textContent = '';
+        return;
+    }
+    if (isMapReady()) {
+        if (status) status.textContent = '✓ Bản đồ';
+        return;
+    }
+    if (mapLoading) return;
+    mapLoading = true;
+    if (status) status.textContent = '⏳ Đang tải…';
+    await preloadMapTiles();
+    mapLoading = false;
+    if (status) {
+        status.textContent = isMapReady()
+            ? '✓ Bản đồ'
+            : (getMapLoadError() ? '✗ Lỗi tải' : '');
+    }
+}
+
+document.getElementById('chkMap')?.addEventListener('change', (e) => { setMapTiles(e.target.checked); });
 document.getElementById('chkWind').addEventListener('change', (e) => {
     if (e.target.checked) { windStrength = 0.4 + Math.random() * 0.5; windAngle = Math.random() * Math.PI * 2; }
     else { windStrength = 0; }

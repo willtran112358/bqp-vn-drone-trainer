@@ -1,5 +1,7 @@
 /** Texture nền procedural — đất/sân cỏ, không cần asset ngoài */
 
+import { drawMapBackground, isMapReady, getMapAttribution } from './map-tiles.js';
+
 let groundPattern = null;
 let dirtPattern = null;
 
@@ -72,6 +74,35 @@ export function drawRealisticGround(ctx, x, y, w, h, scale) {
     ctx.quadraticCurveTo(x + w * 0.45, y + h * 0.68, x + w * 0.55, y + h * 0.55);
     ctx.stroke();
 
+    ctx.restore();
+}
+
+/** Nền sân: bản đồ thật (nếu bật & đã tải) hoặc procedural */
+export function drawArenaGround(ctx, x, y, w, h, scale, useMap) {
+    let usedMap = false;
+    if (useMap && isMapReady()) {
+        usedMap = drawMapBackground(ctx, x, y, w, h);
+        if (usedMap) {
+            ctx.save();
+            ctx.fillStyle = 'rgba(20,30,20,0.12)';
+            ctx.fillRect(x, y, w, h);
+            ctx.restore();
+        }
+    }
+    if (!usedMap) drawRealisticGround(ctx, x, y, w, h, scale);
+    return usedMap;
+}
+
+export function drawMapAttribution(ctx, x, y, w, scale) {
+    if (!isMapReady()) return;
+    ctx.save();
+    ctx.fillStyle = 'rgba(0,0,0,0.55)';
+    ctx.fillRect(x + w - 168 * scale, y + h - 16 * scale, 164 * scale, 14 * scale);
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    ctx.font = `${8 * scale}px Segoe UI, sans-serif`;
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(getMapAttribution(), x + w - 4 * scale, y + h - 9 * scale);
     ctx.restore();
 }
 

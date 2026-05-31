@@ -1,3 +1,5 @@
 .DS_Store
 Thumbs.db
 *.log
+2d/config.local.js
+docs/2d/config.local.js
