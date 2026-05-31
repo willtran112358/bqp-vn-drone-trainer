@@ -1,0 +1,105 @@
+/** Bản dịch giao diện — BQP VN Drone Trainer */
+
+export const vi = {
+    appTitle: 'BQP VN — Huấn luyện Drone FPV',
+    clickToStart: 'BẤM ĐỂ BẮT ĐẦU',
+    loading: 'Đang tải tài nguyên…',
+    missionComplete: 'HOÀN THÀNH NHIỆM VỤ!',
+    helpTitle: 'Hướng dẫn điều khiển',
+    helpClose: 'Đã hiểu',
+    helpToggle: 'Trợ giúp (H)',
+    flightMode: 'Chế độ bay',
+    flightModes: {
+        1: 'Mode 1 — Ga phải',
+        2: 'Mode 2 — Ga trái (mặc định)',
+        3: 'Mode 3 — Ga trái (xoay phải)',
+        4: 'Mode 4 — Acro / FPV Pro',
+    },
+    controls: {
+        gamepad: 'Tay cầm (khuyến nghị)',
+        keyboard: 'Bàn phím + chuột',
+        throttle: 'Ga (lên/xuống)',
+        yaw: 'Xoay trái/phải',
+        pitch: 'Tiến/lùi',
+        roll: 'Nghiêng trái/phải',
+        reset: 'R — Quay lại vị trí 1 giây trước',
+        camera: 'Space — Chuyển FPV / góc thứ 3',
+        modes: '1–4 — Đổi chế độ điều khiển',
+        wasd: 'WASD = cần trái',
+        mouse: 'Chuột = cần phải (bấm vào màn hình trước)',
+        arrows: 'Phím mũi tên = pitch/roll bổ sung',
+    },
+    gui: {
+        settings: 'Cài đặt',
+        debug: 'Gỡ lỗi',
+        composerResolutionScale: 'Độ phân giải hiệu ứng',
+        rendererResolutionScale: 'Độ phân giải render',
+        antiAlias: 'Khử răng cưa',
+        motionBlurShutterSpeed: 'Tốc độ màn trập (motion blur)',
+        aircraft: 'Máy bay',
+        type: 'Loại',
+        model: 'Mô hình 3D',
+        path: 'Đường dẫn',
+        position: 'Vị trí',
+        rollPitchYaw: 'Góc xoay (Roll/Pitch/Yaw)',
+        scale: 'Tỷ lệ',
+        wheelbase: 'Khoảng cách cánh tay',
+        mass: 'Khối lượng',
+        propSize: 'Kích thước cánh quạt',
+        boundingBox: 'Hộp va chạm',
+        size: 'Kích thước',
+        maxCombinedThrust: 'Lực đẩy tối đa',
+        dragForceOverSpeed: 'Lực cản theo vận tốc',
+        dragForceOverSpeedSquared: 'Lực cản theo v²',
+        maxRollRate: 'Tốc độ lăn tối đa',
+        rollTimeConstant: 'Hằng số thời gian lăn',
+        maxPitchRate: 'Tốc độ ngửa tối đa',
+        pitchTimeConstant: 'Hằng số thời gian ngửa',
+        maxYawRate: 'Tốc độ xoay tối đa',
+        yawTimeConstant: 'Hằng số thời gian xoay',
+        stabilization: 'Ổn định tự động',
+        angleLimit: 'Giới hạn góc nghiêng',
+        propSound: 'Âm thanh cánh quạt',
+        recordingFrequency: 'Tần số ghi âm',
+        volume: 'Âm lượng',
+        numBlades: 'Số cánh quạt',
+        maxThrustRPM: 'RPM tối đa',
+        tiltDeltaRPM: 'RPM khi nghiêng nhanh',
+        oscillateRPM: 'Dao động RPM',
+        camera: 'Camera',
+        firstPerson: 'Góc nhìn FPV',
+        thirdPerson: 'Góc nhìn thứ 3',
+        fieldOfView: 'Góc nhìn (FOV)',
+        fishEyeStrength: 'Độ méo mắt cá',
+        shutterSpeed: 'Tốc độ màn trập',
+        poseTimeConstant: 'Làm mượt vị trí',
+        preselected: 'Camera mặc định',
+        map: 'Bản đồ / Sân tập',
+        spawn: 'Điểm xuất phát',
+        gravity: 'Trọng lực',
+        timeScale: 'Tốc độ thời gian',
+        mission: 'Nhiệm vụ',
+        checkpointScale: 'Kích thước checkpoint',
+        checkpointSound: 'Âm thanh checkpoint',
+        exclude: 'Loại trừ đối tượng',
+        background: 'Môi trường',
+        backgroundMap: 'Ảnh nền',
+        environmentMap: 'Ánh sáng / phản chiếu',
+        intensity: 'Cường độ',
+        music: 'Nhạc nền',
+        version: 'Phiên bản',
+    },
+};
+
+export function t(key) {
+    const parts = key.split('.');
+    let node = vi;
+    for (const p of parts) {
+        node = node?.[p];
+    }
+    return node ?? key;
+}
+
+export function translateGuiLabel(name) {
+    return vi.gui[name] ?? name;
+}

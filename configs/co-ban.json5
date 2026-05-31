@@ -1,0 +1,3 @@
+{
+    extends: [ "configs/default.json5", "configs/beginner.json5" ],
+}

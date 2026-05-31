@@ -1,0 +1,3 @@
+{
+    extends: [ "configs/issum_balloons.json5" ],
+}
