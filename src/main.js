@@ -56,6 +56,7 @@ async function main() {
     document.getElementById('battery').style.display = 'none'
     document.getElementById('helpPanel').style.display = 'block'
     document.getElementById('helpBtn').style.display = 'block'
+    document.getElementById('link2d').style.display = 'inline-block'
     document.getElementById('brand').style.display = 'block'
     document.getElementById('hud').style.display = 'block'
     gui.show()

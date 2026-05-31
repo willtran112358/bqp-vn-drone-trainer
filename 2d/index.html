@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Huấn luyện drone 2D nhẹ — BQP Việt Nam">
+    <link rel="icon" type="image/x-icon" href="../media/favicon.ico">
+    <title>BQP VN — Huấn luyện Drone 2D</title>
+    <style>
+        :root {
+            --bqp-green: #1a5c2e;
+            --bqp-gold: #c9a227;
+            --bqp-dark: #0f172a;
+            --bqp-panel: rgba(15, 23, 42, 0.92);
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: var(--bqp-dark);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            color: #e2e8f0;
+        }
+        #wrap { position: relative; width: 100vw; height: 100vh; }
+        canvas { display: block; width: 100%; height: 100%; cursor: crosshair; }
+        .overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(15, 23, 42, 0.85);
+            z-index: 20;
+        }
+        .panel {
+            background: var(--bqp-panel);
+            border: 2px solid var(--bqp-gold);
+            border-radius: 16px;
+            padding: 24px 28px;
+            max-width: min(92vw, 520px);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .panel h1 { margin: 0 0 8px; font-size: 1.35rem; color: var(--bqp-gold); }
+        .panel h2 { margin: 16px 0 8px; font-size: 1rem; color: #94a3b8; }
+        .panel p { margin: 8px 0; font-size: 0.9rem; line-height: 1.5; }
+        .badge {
+            display: inline-block;
+            background: var(--bqp-green);
+            color: #fff;
+            font-size: 0.75rem;
+            padding: 2px 8px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+        .levels { display: flex; flex-direction: column; gap: 8px; margin: 12px 0; }
+        .levels label {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 12px;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .levels label:hover { border-color: var(--bqp-gold); }
+        .levels input { accent-color: var(--bqp-gold); }
+        .skills { display: flex; gap: 8px; flex-wrap: wrap; margin: 8px 0 16px; }
+        .skills button {
+            flex: 1; min-width: 90px;
+            padding: 8px 12px;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            background: transparent;
+            color: #e2e8f0;
+            cursor: pointer;
+        }
+        .skills button.active, .skills button:hover {
+            border-color: var(--bqp-gold);
+            background: rgba(201, 162, 39, 0.15);
+        }
+        .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+        button.primary {
+            flex: 1;
+            padding: 12px 20px;
+            background: var(--bqp-green);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+        button.primary:hover { background: #227a3d; }
+        button.secondary {
+            padding: 12px 16px;
+            background: transparent;
+            color: var(--bqp-gold);
+            border: 1px solid var(--bqp-gold);
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+        }
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin: 8px 0; }
+        th, td { border: 1px solid #334155; padding: 6px 8px; text-align: left; }
+        th { background: var(--bqp-green); }
+        #hud {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            padding: 10px 14px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px 16px;
+            pointer-events: none;
+            z-index: 10;
+            font-size: 13px;
+            font-family: monospace;
+            background: linear-gradient(180deg, rgba(15,23,42,0.85), transparent);
+        }
+        #hud span.gold { color: var(--bqp-gold); }
+        #hud span.ok { color: #22c55e; }
+        #bottomBar {
+            position: absolute;
+            bottom: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 8px;
+            z-index: 10;
+        }
+        #bottomBar button {
+            padding: 6px 14px;
+            background: var(--bqp-panel);
+            border: 1px solid var(--bqp-gold);
+            color: var(--bqp-gold);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        #altBar {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 18px;
+            height: 40vh;
+            border: 2px solid var(--bqp-gold);
+            border-radius: 10px;
+            background: rgba(0,0,0,0.4);
+            z-index: 10;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        #altFill {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 50%;
+            background: linear-gradient(0deg, #1a5c2e, #22c55e);
+            transition: height 0.05s;
+        }
+        #altLabel {
+            position: absolute;
+            right: 36px;
+            top: 50%;
+            transform: translateY(-50%) rotate(-90deg);
+            font-size: 11px;
+            color: #94a3b8;
+            pointer-events: none;
+            z-index: 10;
+        }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+<div id="wrap">
+    <canvas id="game"></canvas>
+    <div id="altBar"><div id="altFill"></div></div>
+    <div id="altLabel">ĐỘ CAO</div>
+    <div id="hud" class="hidden">
+        <span>🇻🇳 <span class="gold">BQP 2D</span></span>
+        <span>Nhiệm vụ: <span id="hudMission" class="gold">—</span></span>
+        <span>Checkpoint: <span id="hudCp" class="gold">0/0</span></span>
+        <span>Thời gian: <span id="hudTime" class="gold">00:00.0</span></span>
+        <span>Chế độ: <span id="hudSkill" class="gold">—</span></span>
+    </div>
+    <div id="bottomBar" class="hidden">
+        <button type="button" id="btnHelp">❓ Trợ giúp (H)</button>
+        <button type="button" id="btnReset">↺ Reset (R)</button>
+        <button type="button" id="btnMenu">☰ Menu</button>
+    </div>
+
+    <div id="menuOverlay" class="overlay">
+        <div class="panel">
+            <span class="badge">Phiên bản 2D · ~30 KB · Không cần tải 3D</span>
+            <h1>🇻🇳 BQP VN — Huấn luyện Drone 2D</h1>
+            <p>Mô phỏng <strong>nhìn từ trên xuống</strong> — luyện mapping cần điều khiển Mode 2 trước khi vào môi trường 3D nặng (~190 MB).</p>
+
+            <h2>Chọn nhiệm vụ</h2>
+            <div class="levels" id="levelList"></div>
+
+            <h2>Cấp độ kỹ năng</h2>
+            <div class="skills" id="skillList">
+                <button type="button" data-skill="co-ban" class="active">Cơ bản</button>
+                <button type="button" data-skill="trung-cap">Trung cấp</button>
+                <button type="button" data-skill="nang-cao">Nâng cao</button>
+            </div>
+
+            <table>
+                <tr><th>Phím / Cần</th><th>Chức năng (Mode 2)</th></tr>
+                <tr><td>W / S</td><td>Ga ↑ ↓ (độ cao + lực đẩy)</td></tr>
+                <tr><td>A / D</td><td>Xoay trái / phải (Yaw)</td></tr>
+                <tr><td>↑ ↓ ← →</td><td>Tiến / lùi / lăn trái / phải</td></tr>
+                <tr><td>R</td><td>Reset vị trí</td></tr>
+                <tr><td>H</td><td>Trợ giúp</td></tr>
+            </table>
+
+            <div class="btn-row">
+                <button type="button" class="primary" id="btnStart">Bắt đầu huấn luyện</button>
+                <a class="secondary" href="../index.html">→ Phiên bản 3D</a>
+            </div>
+        </div>
+    </div>
+
+    <div id="helpOverlay" class="overlay hidden">
+        <div class="panel">
+            <h1>🎮 Điều khiển — Top-down 2D</h1>
+            <p>Layout <strong>Mode 2</strong> giống radio FPV thật và phiên bản 3D:</p>
+            <table>
+                <tr><th>Cần trái</th><th>Phím</th></tr>
+                <tr><td>Ga (Y)</td><td>W / S</td></tr>
+                <tr><td>Yaw (X)</td><td>A / D</td></tr>
+                <tr><td>Pitch (Y)</td><td>↑ / ↓</td></tr>
+                <tr><td>Roll (X)</td><td>← / →</td></tr>
+            </table>
+            <p><strong>Tay cầm:</strong> cần trái = ga + xoay, cần phải = tiến/lùi + lăn.</p>
+            <p>Bay qua các <strong>vòng checkpoint</strong> theo thứ tự (màu vàng → xanh lá). Tránh tường biên (đỏ).</p>
+            <div class="btn-row">
+                <button type="button" class="primary" id="btnHelpClose">Đã hiểu</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script type="module" src="./game.js"></script>
+</body>
+</html>

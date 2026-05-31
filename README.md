@@ -2,7 +2,9 @@
 
 > **Mô phỏng web tĩnh** huấn luyện điều khiển drone FPV cho cán bộ, chiến sĩ — chạy hoàn toàn trên trình duyệt, không cần cài đặt.
 
-**Chơi ngay:** [willtran112358.github.io/bqp-vn-drone-trainer](https://willtran112358.github.io/bqp-vn-drone-trainer/?config=configs/san-tap.json5,configs/co-ban.json5)
+**Chơi ngay (3D):** [willtran112358.github.io/bqp-vn-drone-trainer](https://willtran112358.github.io/bqp-vn-drone-trainer/?config=configs/san-tap.json5,configs/co-ban.json5)
+
+**Chơi ngay (2D nhẹ):** [willtran112358.github.io/bqp-vn-drone-trainer/2d/](https://willtran112358.github.io/bqp-vn-drone-trainer/2d/) — không cần tải asset 3D (~190 MB)
 
 ---
 
@@ -15,6 +17,48 @@
 | **Stack** | Three.js · Rapier (WASM) · Web Gamepad API |
 | **Gốc tham khảo** | Fork & Việt hóa từ [propwash](https://github.com/mqnc/propwash) |
 | **Trạng thái** | Prototype — phù hợp huấn luyện cơ bản |
+
+---
+
+## Phiên bản 2D vs 3D
+
+```mermaid
+flowchart LR
+    subgraph V2D["⚡ 2D — /2d/"]
+        C2["Canvas 2D<br/>~30 KB JS"]
+        T2["Top-down<br/>Checkpoint · Slalom"]
+        L2["Tải tức thì"]
+    end
+    subgraph V3D["🎮 3D — /"]
+        C3["Three.js + Rapier<br/>~190 MB assets"]
+        T3["FPV · Third person<br/>Bản đồ 3D"]
+        L3["Tải 10–30 giây"]
+    end
+
+    User(("Học viên")) --> V2D
+    User --> V3D
+    V2D -->|"Đã quen cần"| V3D
+
+    style V2D fill:#1a5c2e,color:#fff
+    style V3D fill:#0f172a,color:#c9a227
+```
+
+| | **2D** (`/2d/`) | **3D** (`/`) |
+|---|----------------|--------------|
+| Kích thước | **~30 KB** code, 0 asset | ~190 MB assets |
+| Góc nhìn | Top-down (từ trên) | FPV + góc thứ 3 |
+| Vật lý | Đơn giản hóa 2D | Rapier WASM 3D |
+| Phù hợp | Làm quen cần Mode 2, checkpoint | Bay thực chiến, bản đồ phức tạp |
+| Nhiệm vụ | Slalom, hạ cánh điểm đích | Issum, bóng bay, sân tập 3D |
+
+### Nhiệm vụ 2D
+
+| Nhiệm vụ | Mô tả |
+|----------|--------|
+| Sân tập tự do | Làm quen ga, xoay, di chuyển |
+| Slalom cơ bản | 4 checkpoint |
+| Đường hẹp | 8 checkpoint + chướng ngại |
+| Hạ cánh điểm đích | Bay vào vùng đáp, giữ ổn định 2 giây |
 
 ---
 
