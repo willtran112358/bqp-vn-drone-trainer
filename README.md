@@ -1,10 +1,10 @@
 # BQP VN — Huấn luyện Kỹ năng Drone FPV
 
-> **Mô phỏng web tĩnh** huấn luyện điều khiển drone FPV cho cán bộ, chiến sĩ — chạy hoàn toàn trên trình duyệt, không cần cài đặt.
+> **Mô phỏng web tĩnh** huấn luyện điều khiển drone — chạy hoàn toàn trên trình duyệt.
 
-**Chơi ngay (3D):** [willtran112358.github.io/bqp-vn-drone-trainer](https://willtran112358.github.io/bqp-vn-drone-trainer/?config=configs/san-tap.json5,configs/co-ban.json5)
+**Chơi ngay (2D — khuyến nghị):** [willtran112358.github.io/bqp-vn-drone-trainer/2d/](https://willtran112358.github.io/bqp-vn-drone-trainer/2d/)
 
-**Chơi ngay (2D nhẹ):** [willtran112358.github.io/bqp-vn-drone-trainer/2d/](https://willtran112358.github.io/bqp-vn-drone-trainer/2d/) — không cần tải asset 3D (~190 MB)
+> Trang gốc `/` tự chuyển hướng sang 2D. Phiên bản **3D FPV tạm ẩn** (asset ~190 MB, dễ lag khi tải).
 
 ---
 
@@ -14,7 +14,8 @@
 |---|---|
 | **Loại** | Static web app (HTML + JavaScript) |
 | **Chi phí host** | **Miễn phí** qua [GitHub Pages](https://pages.github.com/) |
-| **Stack** | Three.js · Rapier (WASM) · Web Gamepad API |
+| **Stack (2D)** | Canvas 2D · Web Gamepad API — **~30 KB** |
+| **Stack (3D)** | Three.js · Rapier — *tạm ẩn, dev only* |
 | **Gốc tham khảo** | Fork & Việt hóa từ [propwash](https://github.com/mqnc/propwash) |
 | **Trạng thái** | Prototype — phù hợp huấn luyện cơ bản |
 

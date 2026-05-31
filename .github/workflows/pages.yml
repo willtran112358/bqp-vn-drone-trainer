@@ -1,8 +1,13 @@
-name: Deploy GitHub Pages
+name: Deploy GitHub Pages (2D only)
 
 on:
   push:
     branches: [main]
+    paths:
+      - 'docs/**'
+      - 'index.html'
+      - '2d/**'
+      - '.github/workflows/pages.yml'
   workflow_dispatch:
 
 permissions:
@@ -24,13 +29,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Prepare 2D site (exclude 3D assets)
+        run: |
+          mkdir -p _site/2d _site/media
+          cp index.html _site/
+          cp -r 2d/* _site/2d/
+          cp media/favicon.ico _site/media/
+          cp docs/.nojekyll _site/ 2>/dev/null || touch _site/.nojekyll
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: .
+          path: _site
 
       - name: Deploy to GitHub Pages
         id: deployment

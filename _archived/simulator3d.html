@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Mô phỏng huấn luyện kỹ năng điều khiển drone FPV — BQP Việt Nam">
+    <link rel="icon" type="image/x-icon" href="media/favicon.ico">
+    <title>BQP VN — [DEV] Simulator 3D</title>
+    <base href="../">
+
+    <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@v0.183.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@v0.183.0/examples/jsm/"
+      }
+    }
+    </script>
+    <style>
+        :root {
+            --bqp-green: #1a5c2e;
+            --bqp-gold: #c9a227;
+            --bqp-red: #b91c1c;
+            --bqp-dark: #0f172a;
+            --bqp-panel: rgba(15, 23, 42, 0.88);
+        }
+        #helpPanel {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            max-width: min(90vw, 640px);
+            background: var(--bqp-panel);
+            border: 2px solid var(--bqp-gold);
+            border-radius: 16px;
+            padding: 24px 28px;
+            color: #e2e8f0;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            z-index: 100;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            display: none;
+        }
+        #helpPanel h2 {
+            margin: 0 0 12px;
+            color: var(--bqp-gold);
+            font-size: 1.4rem;
+        }
+        #helpPanel table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+            margin: 12px 0;
+        }
+        #helpPanel th, #helpPanel td {
+            border: 1px solid #334155;
+            padding: 6px 10px;
+            text-align: left;
+        }
+        #helpPanel th { background: var(--bqp-green); color: #fff; }
+        #helpPanel button {
+            margin-top: 12px;
+            padding: 10px 24px;
+            background: var(--bqp-green);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        #helpPanel button:hover { background: #227a3d; }
+        #hud {
+            position: absolute;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bqp-panel);
+            border: 1px solid var(--bqp-gold);
+            border-radius: 10px;
+            padding: 6px 16px;
+            color: #94a3b8;
+            font-family: monospace;
+            font-size: 13px;
+            pointer-events: none;
+            z-index: 50;
+            display: none;
+        }
+        #hud span { color: var(--bqp-gold); }
+        #helpBtn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            z-index: 60;
+            background: var(--bqp-panel);
+            border: 1px solid var(--bqp-gold);
+            color: var(--bqp-gold);
+            border-radius: 8px;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            display: none;
+        }
+        #helpBtn:hover { background: rgba(201, 162, 39, 0.15); }
+        #link2d {
+            position: absolute;
+            top: 12px;
+            right: 120px;
+            z-index: 60;
+            background: var(--bqp-panel);
+            border: 1px solid #22c55e;
+            color: #22c55e;
+            border-radius: 8px;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            font-size: 13px;
+            text-decoration: none;
+            display: none;
+        }
+        #link2d:hover { background: rgba(34, 197, 94, 0.15); }
+        #brand {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            z-index: 60;
+            color: var(--bqp-gold);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            font-weight: 700;
+            font-size: 14px;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+            pointer-events: none;
+            display: none;
+        }
+    </style>
+</head>
+
+<body style="margin:0; overflow:hidden; background-color: #0f172a;">
+
+    <div id="archivedBanner" style="position:fixed;top:0;left:0;right:0;z-index:9999;background:#b91c1c;color:#fff;text-align:center;padding:6px;font-size:13px;font-family:sans-serif">
+        ⚠️ 3D DEV ONLY — không deploy · <a href="../2d/" style="color:#fef08a">Dùng bản 2D</a>
+    </div>
+
+    <div id="brand">🇻🇳 BQP VN · Huấn luyện Drone FPV</div>
+
+    <div id="battery" style="
+        height:33.333vh;
+        width:calc(33.333vh * 0.3);
+        position:absolute;
+        top:50%;
+        left:50%;
+        transform:translate(-50%,-50%);
+        border:4px solid #c9a227;
+        border-radius:20px;
+        box-sizing:border-box;
+        padding:10px;
+        display:flex;
+        flex-direction:column;
+        justify-content:flex-end;
+        pointer-events: none;
+    ">
+        <div id="progress" style="
+            height:0%;
+            width:100%;
+            background:linear-gradient(180deg, #22c55e, #1a5c2e);
+            border-radius:4px;
+            position:relative;
+            overflow:hidden;
+        "></div>
+        <span id="clickLabel" style="
+            position:absolute;
+            top:50%;
+            left:50%;
+            transform:translate(-50%,-50%) rotate(-90deg);
+            white-space:nowrap;
+            font-size:4vh;
+            font-family:'Segoe UI', system-ui, sans-serif;
+            font-weight:bold;
+            color:#0f172a;
+        ">BẤM ĐỂ BẮT ĐẦU</span>
+    </div>
+
+    <div id="helpPanel">
+        <h2>🎮 Hướng dẫn điều khiển</h2>
+        <p><strong>Tay cầm (khuyến nghị)</strong> — layout Mode 2 giống radio thật:</p>
+        <table>
+            <tr><th>Cần</th><th>Chức năng</th></tr>
+            <tr><td>Trái ↑↓</td><td>Ga (lên / xuống)</td></tr>
+            <tr><td>Trái ←→</td><td>Xoay trái / phải (Yaw)</td></tr>
+            <tr><td>Phải ↑↓</td><td>Tiến / lùi (Pitch)</td></tr>
+            <tr><td>Phải ←→</td><td>Nghiêng trái / phải (Roll)</td></tr>
+        </table>
+        <p><strong>Bàn phím + chuột:</strong> WASD = cần trái · Chuột = cần phải (bấm vào màn hình trước)</p>
+        <table>
+            <tr><th>Phím</th><th>Chức năng</th></tr>
+            <tr><td>1 – 4</td><td>Đổi chế độ điều khiển (Mode 2 mặc định)</td></tr>
+            <tr><td>R</td><td>Quay lại vị trí ~1 giây trước</td></tr>
+            <tr><td>Space</td><td>Chuyển FPV ↔ góc nhìn thứ 3</td></tr>
+            <tr><td>H</td><td>Mở/đóng bảng trợ giúp này</td></tr>
+        </table>
+        <button id="helpClose">Đã hiểu — Bắt đầu huấn luyện</button>
+    </div>
+
+    <a id="link2d" href="2d/" title="Phiên bản 2D nhẹ">⚡ 2D nhẹ</a>
+    <button id="helpBtn" type="button">❓ Trợ giúp (H)</button>
+
+    <div id="hud">Chế độ bay: <span id="modeLabel">Mode 2</span></div>
+
+    <script type="module" src="./src/main.js"></script>
+
+    <div id="timer" style="
+        height:5vh;
+        position:absolute;
+        top:90%;
+        left:50%;
+        transform:translate(-50%,-50%);
+        border:4px solid #c9a227;
+        background-color: rgba(15,23,42,0.9);
+        color: #e2e8f0;
+        border-radius:20px;
+        box-sizing:border-box;
+        padding:10px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        text-align:center;
+        pointer-events: none;
+        font-size:4vh;
+        font-family:monospace;
+        visibility: hidden;
+    ">
+        00:00'00
+    </div>
+
+    <script>
+        document.getElementById('helpClose').addEventListener('click', () => {
+            document.getElementById('helpPanel').style.display = 'none';
+        });
+        document.getElementById('helpBtn').addEventListener('click', () => {
+            const p = document.getElementById('helpPanel');
+            p.style.display = p.style.display === 'none' ? 'block' : 'none';
+        });
+        window.addEventListener('keydown', (e) => {
+            if (e.key.toLowerCase() === 'h' && !e.repeat) {
+                const p = document.getElementById('helpPanel');
+                p.style.display = p.style.display === 'none' ? 'block' : 'none';
+            }
+        });
+    </script>
+
+</body>
+
+</html>
