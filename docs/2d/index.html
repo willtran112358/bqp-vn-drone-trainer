@@ -3,173 +3,199 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Huấn luyện drone 2D nhẹ — BQP Việt Nam">
+    <meta name="description" content="Huấn luyện drone 2D — BQP Việt Nam">
     <link rel="icon" type="image/x-icon" href="../media/favicon.ico">
     <title>BQP VN — Huấn luyện Drone 2D</title>
     <style>
         :root {
-            --bqp-green: #1a5c2e;
-            --bqp-gold: #c9a227;
-            --bqp-dark: #0f172a;
-            --panel: rgba(15, 23, 42, 0.94);
+            --sand: #b8a88a;
+            --sidebar: rgba(30, 30, 35, 0.82);
+            --panel: rgba(255, 255, 255, 0.92);
+            --text: #1f2937;
+            --muted: #6b7280;
+            --accent: #2563eb;
         }
         * { box-sizing: border-box; }
-        body { margin: 0; overflow: hidden; background: #0a0f1a; font-family: 'Segoe UI', system-ui, sans-serif; color: #e2e8f0; }
+        body {
+            margin: 0; overflow: hidden;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: #3d3830; color: var(--text);
+        }
         #wrap { position: relative; width: 100vw; height: 100vh; }
-        canvas { display: block; width: 100%; height: 100%; }
 
-        .overlay {
-            position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-            background: rgba(10, 15, 26, 0.92); z-index: 30; padding: 16px;
-        }
-        .panel {
-            background: var(--panel); border: 2px solid var(--bqp-gold); border-radius: 16px;
-            padding: 22px 26px; max-width: min(96vw, 680px); max-height: 92vh; overflow-y: auto;
-        }
-        .panel h1 { margin: 0 0 6px; font-size: 1.3rem; color: var(--bqp-gold); }
-        .panel h2 { margin: 14px 0 6px; font-size: 0.95rem; color: #94a3b8; }
-        .panel p { margin: 6px 0; font-size: 0.88rem; line-height: 1.55; color: #cbd5e1; }
-        .badge { display: inline-block; background: var(--bqp-green); color: #fff; font-size: 0.72rem; padding: 3px 8px; border-radius: 6px; margin-bottom: 6px; }
-
-        .explain-grid {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0;
-        }
-        @media (max-width: 560px) { .explain-grid { grid-template-columns: 1fr; } }
-        .explain-card {
-            background: rgba(255,255,255,0.04); border: 1px solid #334155; border-radius: 10px; padding: 12px;
-        }
-        .explain-card strong { color: var(--bqp-gold); display: block; margin-bottom: 6px; font-size: 0.85rem; }
-        .explain-card ul { margin: 0; padding-left: 18px; font-size: 0.82rem; color: #94a3b8; }
-        .explain-card li { margin: 3px 0; }
-
-        .mini-map-demo {
-            background: #0c4a2e; border: 2px dashed #c9a227; border-radius: 10px;
-            height: 100px; position: relative; margin: 8px 0;
-        }
-        .mini-map-demo .drone-icon {
-            position: absolute; left: 50%; top: 55%; transform: translate(-50%,-50%);
-            font-size: 28px; filter: drop-shadow(0 0 4px #22c55e);
-        }
-        .mini-map-demo .ring {
-            position: absolute; left: 50%; top: 22%; transform: translate(-50%,-50%);
-            width: 36px; height: 36px; border: 3px solid #c9a227; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 14px; font-weight: bold; color: #fff;
-        }
-        .mini-map-demo .caption {
-            position: absolute; bottom: 6px; left: 0; right: 0; text-align: center;
-            font-size: 0.75rem; color: #86efac;
+        canvas {
+            display: block;
+            margin-left: 52px;
+            width: calc(100% - 52px);
+            height: 100%;
         }
 
-        .levels { display: flex; flex-direction: column; gap: 6px; margin: 10px 0; }
-        .levels label {
-            display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px;
-            border: 1px solid #334155; border-radius: 8px; cursor: pointer;
+        /* ── Sidebar trái (giống 2D DroneSimulator) ── */
+        #sidebar {
+            position: absolute; left: 0; top: 0; bottom: 0; width: 52px;
+            background: var(--sidebar); backdrop-filter: blur(8px);
+            display: flex; flex-direction: column; align-items: center;
+            padding: 10px 0; gap: 6px; z-index: 20;
         }
-        .levels label:hover, .levels label:has(input:checked) { border-color: var(--bqp-gold); background: rgba(201,162,39,0.08); }
-        .levels input { accent-color: var(--bqp-gold); margin-top: 3px; }
-
-        .skills { display: flex; gap: 6px; flex-wrap: wrap; margin: 8px 0; }
-        .skills button {
-            flex: 1; min-width: 80px; padding: 8px; border: 1px solid #334155; border-radius: 8px;
-            background: transparent; color: #e2e8f0; cursor: pointer; font-size: 0.85rem;
+        #sidebar button {
+            width: 38px; height: 38px; border: none; border-radius: 8px;
+            background: transparent; color: #e5e7eb; font-size: 18px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
         }
-        .skills button.active, .skills button:hover { border-color: var(--bqp-gold); background: rgba(201,162,39,0.15); }
+        #sidebar button:hover, #sidebar button.active { background: rgba(255,255,255,0.12); }
+        #sidebar .spacer { flex: 1; }
 
-        .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
-        button.primary {
-            flex: 1; padding: 12px 18px; background: var(--bqp-green); color: #fff;
-            border: none; border-radius: 8px; font-size: 1rem; cursor: pointer;
+        /* ── Panel phải trên: gió + hướng dẫn ── */
+        #topRight {
+            position: absolute; top: 12px; right: 12px; z-index: 15;
+            display: flex; gap: 10px; align-items: flex-start;
         }
-        button.primary:hover { background: #227a3d; }
-        a.secondary, button.secondary {
-            padding: 12px 14px; background: transparent; color: var(--bqp-gold);
-            border: 1px solid var(--bqp-gold); border-radius: 8px; cursor: pointer;
-            text-decoration: none; font-size: 0.88rem; display: inline-flex; align-items: center;
+        .ui-card {
+            background: var(--panel); border-radius: 8px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+            padding: 10px 12px; font-size: 0.78rem;
         }
+        .ui-card h4 { margin: 0 0 6px; font-size: 0.72rem; color: var(--muted); font-weight: 600; text-transform: uppercase; }
 
-        /* In-game UI */
-        #gameUi { position: absolute; inset: 0; pointer-events: none; z-index: 10; }
-        #gameUi button, #gameUi a { pointer-events: auto; }
+        #windDial {
+            width: 60px; height: 60px; border-radius: 50%;
+            background: #1f2937; position: relative;
+            border: 2px solid #374151;
+        }
+        #windDot {
+            position: absolute; width: 8px; height: 8px;
+            background: #fff; border-radius: 50%;
+            transform: translate(-50%, -50%);
+            left: 30px; top: 12px;
+        }
+        #windVal { font-size: 0.7rem; color: var(--muted); text-align: center; margin-top: 4px; }
 
+        #guidePanel label {
+            display: flex; align-items: center; gap: 6px;
+            margin: 4px 0; cursor: pointer; color: var(--text);
+        }
+        #guidePanel input { accent-color: var(--accent); }
+
+        /* ── Mục tiêu bay ── */
         #objective {
-            position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
-            background: var(--panel); border: 2px solid var(--bqp-gold); border-radius: 12px;
-            padding: 10px 18px; text-align: center; max-width: min(90vw, 420px);
+            position: absolute; top: 12px; left: 64px; z-index: 15;
+            background: var(--panel); border-radius: 8px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+            padding: 8px 14px; max-width: 280px;
         }
-        #objective .title { font-size: 0.72rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; }
-        #objective .text { font-size: 1rem; color: #fff; font-weight: 600; margin-top: 2px; }
-        #objective .sub { font-size: 0.78rem; color: #86efac; margin-top: 4px; }
+        #objective .title { font-size: 0.68rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+        #objective .text { font-size: 0.95rem; font-weight: 600; margin-top: 2px; }
+        #objective .sub { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
 
-        #stats {
-            position: absolute; top: 12px; left: 12px;
-            background: var(--panel); border: 1px solid #334155; border-radius: 10px;
-            padding: 8px 12px; font-size: 0.8rem; line-height: 1.6;
+        /* ── ALT gauge phải (giống Steam) ── */
+        #altPanel {
+            position: absolute; right: 12px; bottom: 80px; z-index: 15;
+            background: var(--panel); border-radius: 8px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+            padding: 10px 12px; text-align: center;
         }
-        #stats .val { color: var(--bqp-gold); font-weight: 600; }
+        #altPanel h4 { margin: 0 0 8px; font-size: 0.72rem; color: var(--muted); font-weight: 700; }
+        #altBar {
+            width: 22px; height: 120px; margin: 0 auto;
+            border: 2px solid #9ca3af; border-radius: 4px;
+            background: linear-gradient(180deg, #dbeafe 0%, #93c5fd 50%, #fca5a5 100%);
+            position: relative; overflow: hidden;
+        }
+        #altFill {
+            position: absolute; bottom: 0; left: 0; right: 0; height: 50%;
+            background: rgba(255,255,255,0.55);
+            border-top: 2px solid #1d4ed8;
+            transition: height 0.08s;
+        }
+        #altVal { font-size: 0.72rem; color: var(--muted); margin-top: 6px; font-family: monospace; }
+
+        /* ── Stats + cần điều khiển ── */
+        #stats {
+            position: absolute; left: 64px; bottom: 12px; z-index: 15;
+            background: var(--panel); border-radius: 8px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+            padding: 8px 12px; font-size: 0.75rem; line-height: 1.7;
+        }
+        #stats .val { font-weight: 700; font-family: monospace; }
 
         #stickPanel {
-            position: absolute; bottom: 12px; left: 12px;
-            background: var(--panel); border: 1px solid #334155; border-radius: 12px;
-            padding: 10px 12px; display: flex; gap: 16px;
+            position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%);
+            background: var(--panel); border-radius: 10px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+            padding: 8px 14px; display: flex; gap: 20px; z-index: 15;
         }
         .stick-box { text-align: center; }
-        .stick-box .lbl { font-size: 0.68rem; color: #94a3b8; margin-bottom: 4px; }
+        .stick-box .lbl { font-size: 0.65rem; color: var(--muted); font-weight: 600; margin-bottom: 4px; }
         .stick {
-            width: 72px; height: 72px; border: 2px solid #475569; border-radius: 50%;
-            position: relative; background: rgba(0,0,0,0.3);
+            width: 64px; height: 64px; border: 2px solid #d1d5db; border-radius: 50%;
+            position: relative; background: #f3f4f6;
         }
         .stick::before, .stick::after {
-            content: ''; position: absolute; background: rgba(255,255,255,0.12);
+            content: ''; position: absolute; background: #e5e7eb;
         }
         .stick::before { left: 50%; top: 4px; bottom: 4px; width: 1px; transform: translateX(-50%); }
         .stick::after { top: 50%; left: 4px; right: 4px; height: 1px; transform: translateY(-50%); }
         .stick-dot {
-            position: absolute; width: 14px; height: 14px; border-radius: 50%;
-            background: #22c55e; border: 2px solid #fff;
+            position: absolute; width: 12px; height: 12px; border-radius: 50%;
+            background: #2563eb; border: 2px solid #fff;
             transform: translate(-50%, -50%); left: 50%; top: 50%;
-            box-shadow: 0 0 8px rgba(34,197,94,0.6);
+            box-shadow: 0 1px 4px rgba(0,0,0,0.25);
         }
-        .stick-keys { font-size: 0.65rem; color: #64748b; margin-top: 4px; line-height: 1.3; }
+        .stick-keys { font-size: 0.62rem; color: var(--muted); margin-top: 3px; }
 
-        #legend {
-            position: absolute; bottom: 12px; right: 12px;
-            background: var(--panel); border: 1px solid #334155; border-radius: 10px;
-            padding: 8px 12px; font-size: 0.72rem; line-height: 1.7;
+        /* ── Menu / overlay ── */
+        .overlay {
+            position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+            background: rgba(0,0,0,0.55); z-index: 50; padding: 16px;
         }
-        .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
-
-        #altPanel {
-            position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
-            background: var(--panel); border: 1px solid #334155; border-radius: 10px;
-            padding: 8px 10px; text-align: center;
+        .panel {
+            background: #fff; border-radius: 12px; padding: 24px 28px;
+            max-width: min(96vw, 560px); max-height: 90vh; overflow-y: auto;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.25);
         }
-        #altBar {
-            width: 16px; height: 100px; border: 2px solid var(--bqp-gold); border-radius: 8px;
-            background: rgba(0,0,0,0.4); margin: 6px auto 0; position: relative; overflow: hidden;
-        }
-        #altFill {
-            position: absolute; bottom: 0; left: 0; right: 0; height: 50%;
-            background: linear-gradient(0deg, #1a5c2e, #22c55e); transition: height 0.08s;
-        }
-        #altPanel .lbl { font-size: 0.68rem; color: #94a3b8; }
-        #altPanel .hint { font-size: 0.62rem; color: #64748b; margin-top: 4px; }
-
-        #bottomBar {
-            position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
-            display: flex; gap: 6px;
-        }
-        #bottomBar button {
-            padding: 7px 14px; background: var(--panel); border: 1px solid var(--bqp-gold);
-            color: var(--bqp-gold); border-radius: 8px; cursor: pointer; font-size: 0.78rem;
+        .panel h1 { margin: 0 0 8px; font-size: 1.25rem; }
+        .panel h2 { margin: 14px 0 6px; font-size: 0.9rem; color: var(--muted); }
+        .panel p, .panel li { font-size: 0.86rem; line-height: 1.55; color: #374151; }
+        .badge {
+            display: inline-block; background: #dbeafe; color: #1d4ed8;
+            font-size: 0.72rem; padding: 3px 8px; border-radius: 6px; margin-bottom: 8px;
         }
 
-        #tipBanner {
-            position: absolute; top: 88px; left: 50%; transform: translateX(-50%);
-            background: rgba(26, 92, 46, 0.95); border: 1px solid #22c55e; border-radius: 8px;
-            padding: 8px 16px; font-size: 0.82rem; color: #dcfce7; max-width: 90vw; text-align: center;
-            transition: opacity 0.5s;
+        .preview-sand {
+            background: var(--sand); border-radius: 8px; height: 90px;
+            position: relative; margin: 10px 0; overflow: hidden;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px);
+            background-size: 20px 20px;
         }
+        .preview-sand .drone-svg { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); width: 48px; }
+
+        .levels { display: flex; flex-direction: column; gap: 6px; margin: 10px 0; }
+        .levels label {
+            display: flex; gap: 10px; padding: 10px 12px;
+            border: 1px solid #e5e7eb; border-radius: 8px; cursor: pointer;
+        }
+        .levels label:hover, .levels label:has(input:checked) {
+            border-color: var(--accent); background: #eff6ff;
+        }
+
+        .skills { display: flex; gap: 6px; flex-wrap: wrap; }
+        .skills button {
+            flex: 1; padding: 8px; border: 1px solid #e5e7eb; border-radius: 8px;
+            background: #fff; cursor: pointer; font-size: 0.82rem;
+        }
+        .skills button.active { border-color: var(--accent); background: #eff6ff; color: #1d4ed8; }
+
+        button.primary {
+            width: 100%; padding: 12px; margin-top: 14px;
+            background: #2563eb; color: #fff; border: none; border-radius: 8px;
+            font-size: 1rem; cursor: pointer; font-weight: 600;
+        }
+        button.primary:hover { background: #1d4ed8; }
+
+        .wind-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+        .wind-row input[type=range] { flex: 1; }
 
         .hidden { display: none !important; }
     </style>
@@ -178,127 +204,117 @@
 <div id="wrap">
     <canvas id="game"></canvas>
 
+    <!-- Sidebar trái -->
+    <nav id="sidebar">
+        <button type="button" id="btnMenu" title="Menu / Nhiệm vụ">🛸</button>
+        <button type="button" id="btnWind" title="Gió">💨</button>
+        <button type="button" id="btnHelp" title="Trợ giúp">🎮</button>
+        <button type="button" id="btnReset" title="Reset (R)">↺</button>
+        <div class="spacer"></div>
+        <button type="button" id="btnPower" title="Thoát về menu">⏻</button>
+    </nav>
+
     <div id="gameUi" class="hidden">
         <div id="objective">
-            <div class="title">🎯 Nhiệm vụ</div>
+            <div class="title">Flight Guide</div>
             <div class="text" id="objText">—</div>
             <div class="sub" id="objSub"></div>
         </div>
+
+        <div id="topRight">
+            <div class="ui-card">
+                <h4>Wind</h4>
+                <div id="windDial"><div id="windDot"></div></div>
+                <div id="windVal">0 m/s</div>
+                <div class="wind-row">
+                    <input type="range" id="windSlider" min="0" max="10" value="0" step="1">
+                </div>
+            </div>
+            <div class="ui-card" id="guidePanel">
+                <h4>Guide View</h4>
+                <label><input type="checkbox" id="chkPath" checked> Đường bay</label>
+                <label><input type="checkbox" id="chkGrid" checked> Lưới sân</label>
+                <label><input type="checkbox" id="chkWind"> Bật gió</label>
+            </div>
+        </div>
+
         <div id="stats">
             ⏱ <span class="val" id="statTime">00:00.0</span><br>
-            📍 Checkpoint: <span class="val" id="statCp">—</span><br>
-            ⚙ Cấp: <span class="val" id="statSkill">—</span>
+            📍 CP: <span class="val" id="statCp">—</span> ·
+            ⚙ <span class="val" id="statSkill">—</span>
         </div>
-        <div id="tipBanner">Mũi drone = mũi tên xanh · Bay qua <strong>vòng vàng</strong> theo thứ tự số</div>
 
         <div id="stickPanel">
             <div class="stick-box">
-                <div class="lbl">CẦN TRÁI</div>
-                <div class="stick" id="stickL"><div class="stick-dot" id="dotL"></div></div>
-                <div class="stick-keys">W/S = Ga<br>A/D = Xoay</div>
+                <div class="lbl">CẦN TRÁI · Mode 2</div>
+                <div class="stick"><div class="stick-dot" id="dotL"></div></div>
+                <div class="stick-keys">W/S Ga · A/D Xoay</div>
             </div>
             <div class="stick-box">
                 <div class="lbl">CẦN PHẢI</div>
-                <div class="stick" id="stickR"><div class="stick-dot" id="dotR"></div></div>
-                <div class="stick-keys">↑↓ = Tiến/Lùi<br>←→ = Nghiêng</div>
+                <div class="stick"><div class="stick-dot" id="dotR"></div></div>
+                <div class="stick-keys">↑↓ Tiến/Lùi · ←→ Nghiêng</div>
             </div>
-        </div>
-
-        <div id="legend">
-            <span class="dot" style="background:#c9a227"></span> Vòng tiếp theo<br>
-            <span class="dot" style="background:#22c55e"></span> Đã qua<br>
-            <span class="dot" style="background:#64748b"></span> Chưa tới<br>
-            <span class="dot" style="background:#ef4444"></span> Biên sân (tránh)
         </div>
 
         <div id="altPanel">
-            <div class="lbl">ĐỘ CAO</div>
+            <h4>ALT</h4>
             <div id="altBar"><div id="altFill"></div></div>
-            <div class="hint">W ↑ · S ↓</div>
-        </div>
-
-        <div id="bottomBar">
-            <button type="button" id="btnHelp">❓ Trợ giúp</button>
-            <button type="button" id="btnReset">↺ Reset</button>
-            <button type="button" id="btnMenu">☰ Menu</button>
+            <div id="altVal">60m</div>
         </div>
     </div>
 
+    <!-- Menu chính -->
     <div id="menuOverlay" class="overlay">
         <div class="panel">
-            <span class="badge">2D · Nhẹ · Tải tức thì</span>
-            <h1>🇻🇳 Huấn luyện Drone — Góc nhìn từ trên</h1>
-            <p>Bạn nhìn drone <strong>từ trên xuống</strong> như radar. Mũi drone hướng về phía nào, bay tiến sẽ đi về phía đó.</p>
+            <span class="badge">BQP VN · Huấn luyện Drone 2D</span>
+            <h1>2D Drone Simulator</h1>
+            <p>Phong cách <strong>nhìn từ trên</strong> — luyện bay tầm nhìn (VLOS), hỗ trợ tay cầm Mode 1 & 2. Tham khảo <a href="https://store.steampowered.com/app/4299560/2D_DroneSimulator/" target="_blank" rel="noopener">2D DroneSimulator</a>.</p>
 
-            <div class="explain-grid">
-                <div class="explain-card">
-                    <strong>👀 Bạn sẽ thấy gì?</strong>
-                    <div class="mini-map-demo">
-                        <div class="ring">1</div>
-                        <div class="drone-icon">🛸</div>
-                        <div class="caption">↑ Mũi drone · ○ Vòng checkpoint</div>
-                    </div>
-                    <ul>
-                        <li><strong style="color:#c9a227">Vòng vàng</strong> = bay qua tiếp theo</li>
-                        <li><strong style="color:#22c55e">Vòng xanh</strong> = đã hoàn thành</li>
-                        <li><strong style="color:#ef4444">Viền đỏ</strong> = biên sân, đừng chạm</li>
-                    </ul>
-                </div>
-                <div class="explain-card">
-                    <strong>🎮 Điều khiển đơn giản</strong>
-                    <ul>
-                        <li><strong>W / S</strong> — Tăng / giảm ga (bay cao hơn, nhanh hơn)</li>
-                        <li><strong>A / D</strong> — Xoay drone trái / phải</li>
-                        <li><strong>↑ ↓ ← →</strong> — Bay tiến / lùi / trượt ngang</li>
-                        <li>Cần trái + phải hiển thị <strong>live</strong> góc dưới màn hình</li>
-                    </ul>
-                </div>
+            <div class="preview-sand">
+                <svg class="drone-svg" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <ellipse cx="34" cy="38" rx="22" ry="12" fill="rgba(0,0,0,0.12)"/>
+                    <line x1="32" y1="32" x2="14" y2="14" stroke="#4a4a4a" stroke-width="3" stroke-linecap="round"/>
+                    <line x1="32" y1="32" x2="50" y2="14" stroke="#4a4a4a" stroke-width="3" stroke-linecap="round"/>
+                    <line x1="32" y1="32" x2="14" y2="50" stroke="#4a4a4a" stroke-width="3" stroke-linecap="round"/>
+                    <line x1="32" y1="32" x2="50" y2="50" stroke="#4a4a4a" stroke-width="3" stroke-linecap="round"/>
+                    <circle cx="14" cy="14" r="4" fill="#2d2d2d" stroke="#666"/>
+                    <circle cx="50" cy="14" r="4" fill="#2d2d2d" stroke="#666"/>
+                    <circle cx="14" cy="50" r="4" fill="#2d2d2d" stroke="#666"/>
+                    <circle cx="50" cy="50" r="4" fill="#2d2d2d" stroke="#666"/>
+                    <rect x="26" y="28" width="12" height="8" rx="2" fill="#6b7280"/>
+                    <circle cx="38" cy="32" r="2" fill="#ef4444"/>
+                    <line x1="32" y1="29" x2="32" y2="35" stroke="#dc2626" stroke-width="1.2"/>
+                    <line x1="29" y1="32" x2="35" y2="32" stroke="#dc2626" stroke-width="1.2"/>
+                </svg>
             </div>
 
-            <h2>Chọn nhiệm vụ</h2>
+            <h2>Chọn khóa huấn luyện</h2>
             <div class="levels" id="levelList"></div>
 
-            <h2>Cấp độ (độ khó drone)</h2>
+            <h2>Cấp độ</h2>
             <div class="skills" id="skillList">
-                <button type="button" data-skill="co-ban" class="active">🟢 Cơ bản</button>
-                <button type="button" data-skill="trung-cap">🟡 Trung cấp</button>
-                <button type="button" data-skill="nang-cao">🔴 Nâng cao</button>
+                <button type="button" data-skill="co-ban" class="active">Cơ bản</button>
+                <button type="button" data-skill="trung-cap">Trung cấp</button>
+                <button type="button" data-skill="nang-cao">Nâng cao</button>
             </div>
 
-            <div class="btn-row">
-                <button type="button" class="primary" id="btnStart">▶ Bắt đầu</button>
-            </div>
-            <p style="font-size:0.78rem;color:#64748b;margin-top:12px;text-align:center">
-                Phiên bản 3D FPV tạm ẩn (đang tối ưu tải ~190 MB asset).
-            </p>
+            <button type="button" class="primary" id="btnStart">▶ Bắt đầu bay</button>
         </div>
     </div>
 
     <div id="helpOverlay" class="overlay hidden">
         <div class="panel">
-            <h1>🎮 Trợ giúp nhanh</h1>
-            <div class="explain-grid">
-                <div class="explain-card">
-                    <strong>Cần trái — Ga & Xoay</strong>
-                    <ul>
-                        <li><b>W</b> — Ga lên (cao hơn, nhanh hơn)</li>
-                        <li><b>S</b> — Ga xuống</li>
-                        <li><b>A / D</b> — Xoay trái / phải</li>
-                    </ul>
-                </div>
-                <div class="explain-card">
-                    <strong>Cần phải — Di chuyển</strong>
-                    <ul>
-                        <li><b>↑</b> — Bay tiến (theo mũi drone)</li>
-                        <li><b>↓</b> — Bay lùi</li>
-                        <li><b>← →</b> — Trượt ngang</li>
-                    </ul>
-                </div>
-            </div>
-            <p><b>Mẹo:</b> Xoay drone (A/D) hướng mũi về vòng vàng, rồi giữ ↑ để bay tới. Giảm ga (S) khi gần vòng để dễ kiểm soát.</p>
-            <div class="btn-row">
-                <button type="button" class="primary" id="btnHelpClose">Đã hiểu</button>
-            </div>
+            <h1>🎮 Hướng dẫn điều khiển</h1>
+            <p><strong>Mode 2</strong> (chuẩn radio VLOS):</p>
+            <ul>
+                <li><strong>Cần trái:</strong> W/S = Ga · A/D = Xoay (Yaw)</li>
+                <li><strong>Cần phải:</strong> ↑↓ = Tiến/Lùi · ←→ = Nghiêng (Roll)</li>
+                <li><strong>Tay cầm Xbox/PS:</strong> cần trái + phải map tương tự</li>
+                <li><strong>R</strong> = Reset · <strong>H</strong> = Trợ giúp</li>
+            </ul>
+            <p>Bay qua các <strong>vòng trắng</strong> theo thứ tự. Vòng cam = tiếp theo. Hạ cánh tại ký hiệu <strong>H</strong>.</p>
+            <button type="button" class="primary" id="btnHelpClose">Đã hiểu</button>
         </div>
     </div>
 </div>

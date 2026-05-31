@@ -1,5 +1,8 @@
 import { ARENA, LEVELS, SKILLS } from './levels.js';
 import { readInputs, consumeKey, lastInputs } from './input.js';
+import {
+    updatePropAnimation, drawDroneTopDown, drawHelipad, drawCheckpointRing,
+} from './drone-sprite.js';
 
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
@@ -11,17 +14,27 @@ let finished = false;
 let cpIndex = 0;
 let elapsed = 0;
 let landTimer = 0;
-let tipHidden = false;
+let showPathGuide = true;
+let showGrid = true;
+let windStrength = 0;
+let windAngle = 0;
 
 const drone = { x: 400, y: 300, angle: 0, vx: 0, vy: 0, alt: 0.5 };
 let scale = 1, offsetX = 0, offsetY = 0;
+let arenaRect = { x: 0, y: 0, w: 0, h: 0 };
 
 function resize() {
+    const sidebar = 52;
+    const topPad = 8;
+    const rightPad = 8;
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    scale = Math.min(canvas.width / ARENA.w, canvas.height / ARENA.h) * 0.88;
-    offsetX = (canvas.width - ARENA.w * scale) / 2;
-    offsetY = (canvas.height - ARENA.h * scale) / 2;
+    const availW = canvas.width - sidebar - rightPad * 2;
+    const availH = canvas.height - topPad * 2;
+    scale = Math.min(availW / ARENA.w, availH / ARENA.h) * 0.96;
+    offsetX = sidebar + (availW - ARENA.w * scale) / 2;
+    offsetY = topPad + (availH - ARENA.h * scale) / 2;
+    arenaRect = { x: offsetX, y: offsetY, w: ARENA.w * scale, h: ARENA.h * scale };
 }
 window.addEventListener('resize', resize);
 resize();
@@ -42,6 +55,7 @@ function resetDrone() {
     finished = false;
     landTimer = 0;
     updateObjective();
+    updateWindDial();
 }
 
 function skill() { return SKILLS[skillId]; }
@@ -50,17 +64,17 @@ function level() { return LEVELS[levelIdx]; }
 function getObjectiveText() {
     const lv = level();
     const cps = lv.checkpoints;
-    if (finished) return { main: '✅ Hoàn thành!', sub: `Thời gian: ${formatTime(elapsed)}` };
-    if (!cps.length) return { main: 'Tự do — Làm quen điều khiển', sub: 'Thử W/S ga · A/D xoay · mũi tên di chuyển' };
+    if (finished) return { main: 'Hoàn thành nhiệm vụ!', sub: `Thời gian: ${formatTime(elapsed)}` };
+    if (!cps.length) return { main: 'Sân tập tự do', sub: 'Luyện ga · xoay · di chuyển trên sân' };
     if (lv.landing && cpIndex >= cps.length) {
         return {
-            main: '🛬 Hạ cánh vào vòng xanh',
-            sub: `Giữ yên trong vòng 2 giây · Ga thấp (S) · ${landTimer.toFixed(1)}/2.0s`,
+            main: 'Hạ cánh lên bãi H',
+            sub: `Giữ ổn định ${landTimer.toFixed(1)} / ${lv.landing.holdSec}s · Ga thấp (S)`,
         };
     }
     return {
-        main: `Bay qua vòng vàng số ${cpIndex + 1}`,
-        sub: `${cpIndex}/${cps.length} checkpoint · Xoay (A/D) hướng mũi về vòng rồi giữ ↑`,
+        main: `Bay qua vòng ${cpIndex + 1}`,
+        sub: `${cpIndex}/${cps.length} checkpoint`,
     };
 }
 
@@ -70,54 +84,54 @@ function updateObjective() {
     document.getElementById('objSub').textContent = sub;
 }
 
+function updateWindDial() {
+    const deg = ((windAngle * 180 / Math.PI) + 360) % 360;
+    document.getElementById('windVal').textContent = `${Math.round(windStrength * 10)} m/s`;
+    const dot = document.getElementById('windDot');
+    const r = 18;
+    dot.style.left = `${30 + Math.sin(windAngle) * r}px`;
+    dot.style.top = `${30 - Math.cos(windAngle) * r}px`;
+}
+
 function updateStickHud() {
     const { throttle, yaw, pitch, roll } = lastInputs;
-    const dotL = document.getElementById('dotL');
-    const dotR = document.getElementById('dotR');
-    dotL.style.left = `${50 + yaw * 38}%`;
-    dotL.style.top = `${50 - throttle * 38}%`;
-    dotR.style.left = `${50 + roll * 38}%`;
-    dotR.style.top = `${50 - pitch * 38}%`;
+    document.getElementById('dotL').style.left = `${50 + yaw * 36}%`;
+    document.getElementById('dotL').style.top = `${50 - throttle * 36}%`;
+    document.getElementById('dotR').style.left = `${50 + roll * 36}%`;
+    document.getElementById('dotR').style.top = `${50 - pitch * 36}%`;
 }
 
 function updateHud() {
-    const lv = level();
-    const total = lv.checkpoints.length;
     document.getElementById('statTime').textContent = formatTime(elapsed);
     document.getElementById('statSkill').textContent = skill().name;
-
-    let cpText = total ? `${Math.min(cpIndex, total)} / ${total}` : 'Tự do';
-    document.getElementById('statCp').textContent = cpText;
+    const total = level().checkpoints.length;
+    document.getElementById('statCp').textContent = total ? `${Math.min(cpIndex, total)}/${total}` : '—';
     document.getElementById('altFill').style.height = `${drone.alt * 100}%`;
+    document.getElementById('altVal').textContent = `${Math.round(drone.alt * 120)}m`;
     updateObjective();
     updateStickHud();
 }
 
 function update(dt) {
     if (!running) return;
-
     const inp = readInputs();
     if (inp.reset) resetDrone();
     if (consumeKey('h')) toggleHelp();
 
-    if (finished) {
-        updateHud();
-        return;
-    }
+    updatePropAnimation(dt, (inp.throttle * 0.5 + 0.5));
+
+    if (finished) { updateHud(); return; }
 
     const s = skill();
     elapsed += dt;
-
     drone.angle += inp.yaw * s.yawRate * dt;
+
     const thrust = (inp.throttle * 0.5 + 0.5) * s.thrustPower;
     drone.alt += (thrust - 0.35) * s.altDecay * dt;
     drone.alt = Math.max(0.05, Math.min(1, drone.alt));
 
     let p = inp.pitch, r = inp.roll;
-    if (s.stabilization > 0) {
-        p *= (1 - s.stabilization);
-        r *= (1 - s.stabilization);
-    }
+    if (s.stabilization > 0) { p *= (1 - s.stabilization); r *= (1 - s.stabilization); }
     const mag = Math.hypot(p, r);
     if (mag > s.angleLimit) { const f = s.angleLimit / mag; p *= f; r *= f; }
 
@@ -127,6 +141,12 @@ function update(dt) {
     const cos = Math.cos(drone.angle), sin = Math.sin(drone.angle);
     drone.vx += (cos * localFx - sin * localRy) * s.accel * dt;
     drone.vy += (sin * localFx + cos * localRy) * s.accel * dt;
+
+    if (windStrength > 0) {
+        drone.vx += Math.cos(windAngle) * windStrength * 18 * dt;
+        drone.vy += Math.sin(windAngle) * windStrength * 18 * dt;
+    }
+
     drone.vx *= s.drag;
     drone.vy *= s.drag;
     drone.x += drone.vx * dt;
@@ -148,13 +168,6 @@ function update(dt) {
     checkCheckpoints();
     checkLanding(dt);
     updateHud();
-
-    if (!tipHidden && elapsed > 10) {
-        tipHidden = true;
-        const tip = document.getElementById('tipBanner');
-        tip.style.opacity = '0';
-        setTimeout(() => tip.classList.add('hidden'), 500);
-    }
 }
 
 function pointInRect(x, y, r) {
@@ -173,8 +186,7 @@ function pushOutOfRect(d, r) {
 function checkCheckpoints() {
     const cps = level().checkpoints;
     if (!cps.length || cpIndex >= cps.length) return;
-    const cp = cps[cpIndex];
-    if (Math.hypot(drone.x - cp.x, drone.y - cp.y) < cp.r) {
+    if (Math.hypot(drone.x - cps[cpIndex].x, drone.y - cps[cpIndex].y) < cps[cpIndex].r) {
         cpIndex++;
         if (cpIndex >= cps.length && !level().landing) finished = true;
     }
@@ -184,8 +196,7 @@ function checkLanding(dt) {
     const land = level().landing;
     if (!land || cpIndex < level().checkpoints.length) return;
     const dist = Math.hypot(drone.x - land.x, drone.y - land.y);
-    const slow = Math.hypot(drone.vx, drone.vy) < 40;
-    if (dist < land.r && slow && drone.alt < 0.35) {
+    if (dist < land.r && Math.hypot(drone.vx, drone.vy) < 40 && drone.alt < 0.35) {
         landTimer += dt;
         if (landTimer >= land.holdSec) finished = true;
     } else {
@@ -198,212 +209,129 @@ function formatTime(t) {
     return `${String(m).padStart(2, '0')}:${(t - m * 60).toFixed(1).padStart(4, '0')}`;
 }
 
-function drawArena() {
-    ctx.fillStyle = '#14532d';
-    ctx.fillRect(offsetX - 4, offsetY - 4, ARENA.w * scale + 8, ARENA.h * scale + 8);
+function drawArenaBackground() {
+    ctx.fillStyle = '#3d3830';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    ctx.fillStyle = '#166534';
-    ctx.fillRect(offsetX, offsetY, ARENA.w * scale, ARENA.h * scale);
+    ctx.fillStyle = '#b8a88a';
+    ctx.fillRect(arenaRect.x, arenaRect.y, arenaRect.w, arenaRect.h);
 
-    ctx.strokeStyle = 'rgba(255,255,255,0.06)';
-    ctx.lineWidth = 1;
-    for (let x = 0; x <= ARENA.w; x += 50) {
-        const [sx] = worldToScreen(x, 0);
-        ctx.beginPath(); ctx.moveTo(sx, offsetY); ctx.lineTo(sx, offsetY + ARENA.h * scale); ctx.stroke();
+    if (showGrid) {
+        ctx.strokeStyle = 'rgba(255,255,255,0.55)';
+        ctx.lineWidth = 1;
+        for (let x = 0; x <= ARENA.w; x += 40) {
+            const [sx] = worldToScreen(x, 0);
+            ctx.beginPath();
+            ctx.moveTo(sx, arenaRect.y);
+            ctx.lineTo(sx, arenaRect.y + arenaRect.h);
+            ctx.stroke();
+        }
+        for (let y = 0; y <= ARENA.h; y += 40) {
+            const [, sy] = worldToScreen(0, y);
+            ctx.beginPath();
+            ctx.moveTo(arenaRect.x, sy);
+            ctx.lineTo(arenaRect.x + arenaRect.w, sy);
+            ctx.stroke();
+        }
     }
-    for (let y = 0; y <= ARENA.h; y += 50) {
-        const [, sy] = worldToScreen(0, y);
-        ctx.beginPath(); ctx.moveTo(offsetX, sy); ctx.lineTo(offsetX + ARENA.w * scale, sy); ctx.stroke();
-    }
 
-    ctx.strokeStyle = '#ef4444';
-    ctx.lineWidth = 4 * scale;
-    ctx.setLineDash([8 * scale, 6 * scale]);
+    ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+    ctx.lineWidth = 5 * scale;
     ctx.strokeRect(
         offsetX + ARENA.margin * scale, offsetY + ARENA.margin * scale,
         (ARENA.w - 2 * ARENA.margin) * scale, (ARENA.h - 2 * ARENA.margin) * scale
     );
-    ctx.setLineDash([]);
 }
 
-function drawSpawn() {
+function drawCourseMarkings() {
     const lv = level();
     const [sx, sy] = worldToScreen(lv.spawn.x, lv.spawn.y);
-    ctx.fillStyle = 'rgba(59,130,246,0.2)';
-    ctx.beginPath();
-    ctx.arc(sx, sy, 22 * scale, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#93c5fd';
-    ctx.font = `bold ${11 * scale}px Segoe UI, sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.fillText('XUẤT PHÁT', sx, sy - 28 * scale);
-}
+    drawHelipad(ctx, sx, sy, 38, scale);
 
-function drawPathHints() {
-    const cps = level().checkpoints;
-    if (cps.length < 2) return;
-    ctx.strokeStyle = 'rgba(201,162,39,0.35)';
-    ctx.lineWidth = 2 * scale;
-    ctx.setLineDash([6 * scale, 8 * scale]);
+    ctx.strokeStyle = 'rgba(255,255,255,0.75)';
+    ctx.lineWidth = 6 * scale;
+    ctx.lineCap = 'round';
     ctx.beginPath();
-    const start = level().spawn;
-    ctx.moveTo(...worldToScreen(start.x, start.y));
-    for (let i = 0; i < cps.length; i++) {
-        if (i < cpIndex) continue;
-        ctx.lineTo(...worldToScreen(cps[i].x, cps[i].y));
+    ctx.moveTo(sx, sy);
+    const cps = lv.checkpoints;
+    if (showPathGuide && cps.length) {
+        for (let i = cpIndex; i < cps.length; i++) {
+            const [cx, cy] = worldToScreen(cps[i].x, cps[i].y);
+            ctx.lineTo(cx, cy);
+        }
     }
     ctx.stroke();
-    ctx.setLineDash([]);
+
+    if (lv.landing) {
+        const [lx, ly] = worldToScreen(lv.landing.x, lv.landing.y);
+        drawHelipad(ctx, lx, ly, lv.landing.r * 0.85, scale);
+    }
 }
 
 function drawObstacles() {
     for (const ob of level().obstacles ?? []) {
         const [sx, sy] = worldToScreen(ob.x, ob.y);
-        ctx.fillStyle = '#334155';
+        ctx.fillStyle = 'rgba(90,82,70,0.85)';
         ctx.fillRect(sx, sy, ob.w * scale, ob.h * scale);
-        ctx.strokeStyle = '#64748b';
+        ctx.strokeStyle = 'rgba(255,255,255,0.5)';
         ctx.lineWidth = 2;
         ctx.strokeRect(sx, sy, ob.w * scale, ob.h * scale);
-        ctx.fillStyle = 'rgba(255,255,255,0.15)';
-        ctx.font = `${10 * scale}px sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.fillText('⚠', sx + ob.w * scale / 2, sy + ob.h * scale / 2 + 4 * scale);
     }
 }
 
 function drawCheckpoints() {
-    const cps = level().checkpoints;
-    cps.forEach((cp, i) => {
+    level().checkpoints.forEach((cp, i) => {
         const [sx, sy] = worldToScreen(cp.x, cp.y);
-        const r = cp.r * scale;
-        const done = i < cpIndex;
-        const active = i === cpIndex;
+        const state = i < cpIndex ? 'done' : i === cpIndex ? 'active' : 'pending';
+        drawCheckpointRing(ctx, sx, sy, cp.r, scale, state);
+        if (state === 'active') {
+            ctx.fillStyle = 'rgba(255,255,255,0.95)';
+            ctx.font = `bold ${13 * scale}px Segoe UI, sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(String(i + 1), sx, sy);
+        }
+    });
+}
 
-        if (active) {
+function drawWindVectors() {
+    if (windStrength <= 0) return;
+    ctx.strokeStyle = 'rgba(59,130,246,0.35)';
+    ctx.lineWidth = 1;
+    for (let x = 60; x < ARENA.w; x += 80) {
+        for (let y = 60; y < ARENA.h; y += 80) {
+            const [sx, sy] = worldToScreen(x, y);
+            const len = windStrength * 12 * scale;
             ctx.beginPath();
-            ctx.arc(sx, sy, r + 8 * scale, 0, Math.PI * 2);
-            ctx.strokeStyle = 'rgba(201,162,39,0.4)';
-            ctx.lineWidth = 3 * scale;
+            ctx.moveTo(sx, sy);
+            ctx.lineTo(sx + Math.cos(windAngle) * len, sy + Math.sin(windAngle) * len);
             ctx.stroke();
         }
-
-        ctx.beginPath();
-        ctx.arc(sx, sy, r, 0, Math.PI * 2);
-        ctx.fillStyle = done ? 'rgba(34,197,94,0.2)' : active ? 'rgba(201,162,39,0.25)' : 'rgba(100,116,139,0.15)';
-        ctx.fill();
-        ctx.strokeStyle = done ? '#22c55e' : active ? '#c9a227' : '#64748b';
-        ctx.lineWidth = (active ? 5 : 2) * scale;
-        ctx.stroke();
-
-        ctx.fillStyle = '#fff';
-        ctx.font = `bold ${14 * scale}px Segoe UI, sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(String(i + 1), sx, sy);
-    });
-
-    const land = level().landing;
-    if (land && cpIndex >= cps.length) {
-        const [sx, sy] = worldToScreen(land.x, land.y);
-        ctx.beginPath();
-        ctx.arc(sx, sy, land.r * scale, 0, Math.PI * 2);
-        ctx.fillStyle = landTimer > 0 ? 'rgba(34,197,94,0.25)' : 'rgba(59,130,246,0.2)';
-        ctx.fill();
-        ctx.strokeStyle = landTimer > 0 ? '#22c55e' : '#3b82f6';
-        ctx.lineWidth = 4 * scale;
-        ctx.setLineDash([8, 6]);
-        ctx.stroke();
-        ctx.setLineDash([]);
-        ctx.fillStyle = '#fff';
-        ctx.font = `bold ${12 * scale}px Segoe UI, sans-serif`;
-        ctx.fillText('ĐÁP', sx, sy);
     }
 }
 
 function drawDrone() {
     const [sx, sy] = worldToScreen(drone.x, drone.y);
-    const arm = (18 + drone.alt * 8) * scale;
-
-    ctx.save();
-    ctx.translate(sx, sy);
-    ctx.rotate(drone.angle);
-
-    ctx.shadowColor = '#22c55e';
-    ctx.shadowBlur = 12 * drone.alt;
-
-    // velocity trail
-    const spd = Math.hypot(drone.vx, drone.vy);
-    if (spd > 20) {
-        ctx.strokeStyle = `rgba(34,197,94,${Math.min(0.5, spd / 200)})`;
-        ctx.lineWidth = 3 * scale;
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.lineTo(-drone.vx * 0.08 * scale, -drone.vy * 0.08 * scale);
-        ctx.stroke();
-    }
-
-    // arms
-    ctx.strokeStyle = '#c9a227';
-    ctx.lineWidth = 3 * scale;
-    for (const a of [0, Math.PI / 2, Math.PI, Math.PI * 1.5]) {
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.lineTo(Math.cos(a) * arm, Math.sin(a) * arm);
-        ctx.stroke();
-        ctx.fillStyle = '#64748b';
-        ctx.beginPath();
-        ctx.arc(Math.cos(a) * arm, Math.sin(a) * arm, 5 * scale, 0, Math.PI * 2);
-        ctx.fill();
-    }
-
-    // body
-    ctx.fillStyle = '#1a5c2e';
-    ctx.strokeStyle = '#c9a227';
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.arc(0, 0, 8 * scale, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-
-    // nose arrow (mũi drone)
-    ctx.fillStyle = '#22c55e';
-    ctx.beginPath();
-    ctx.moveTo(arm * 0.55, 0);
-    ctx.lineTo(arm * 0.15, -7 * scale);
-    ctx.lineTo(arm * 0.15, 7 * scale);
-    ctx.closePath();
-    ctx.fill();
-    ctx.strokeStyle = '#fff';
-    ctx.lineWidth = 1;
-    ctx.stroke();
-
-    ctx.fillStyle = '#fff';
-    ctx.font = `bold ${9 * scale}px sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.fillText('MŨI', arm * 0.38, -12 * scale);
-
-    ctx.restore();
+    const throttle = lastInputs.throttle * 0.5 + 0.5;
+    drawDroneTopDown(ctx, sx, sy, drone.angle + Math.PI / 2, scale, drone.alt, throttle);
 }
 
 function drawFinishBanner() {
     if (!finished) return;
-    ctx.fillStyle = 'rgba(10,15,26,0.8)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = '#22c55e';
-    ctx.font = 'bold 26px Segoe UI, sans-serif';
+    ctx.fillStyle = 'rgba(0,0,0,0.45)';
+    ctx.fillRect(arenaRect.x, arenaRect.y, arenaRect.w, arenaRect.h);
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 24px Segoe UI, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('✅ HOÀN THÀNH!', canvas.width / 2, canvas.height / 2 - 12);
-    ctx.fillStyle = '#c9a227';
-    ctx.font = '20px monospace';
-    ctx.fillText(formatTime(elapsed), canvas.width / 2, canvas.height / 2 + 22);
+    ctx.fillText('✓ HOÀN THÀNH', canvas.width / 2, canvas.height / 2 - 8);
+    ctx.font = '18px monospace';
+    ctx.fillText(formatTime(elapsed), canvas.width / 2, canvas.height / 2 + 24);
 }
 
 function render() {
-    ctx.fillStyle = '#0a0f1a';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    drawArena();
-    drawPathHints();
-    drawSpawn();
+    drawArenaBackground();
+    drawWindVectors();
+    drawCourseMarkings();
     drawObstacles();
     drawCheckpoints();
     drawDrone();
@@ -425,27 +353,16 @@ function buildLevelList() {
     LEVELS.forEach((lv, i) => {
         const label = document.createElement('label');
         label.innerHTML = `<input type="radio" name="level" value="${i}" ${i === 0 ? 'checked' : ''}>
-            <span><strong>${lv.name}</strong><br><small style="color:#94a3b8">${lv.desc}</small></span>`;
+            <span><strong>${lv.name}</strong><br><small>${lv.desc}</small></span>`;
         el.appendChild(label);
     });
-}
-
-function getSelectedLevel() {
-    const r = document.querySelector('input[name="level"]:checked');
-    return r ? parseInt(r.value, 10) : 0;
 }
 
 function showMenu(show) {
     document.getElementById('menuOverlay').classList.toggle('hidden', !show);
     document.getElementById('gameUi').classList.toggle('hidden', show);
     running = !show;
-    if (!show) {
-        resetDrone();
-        tipHidden = false;
-        const tip = document.getElementById('tipBanner');
-        tip.classList.remove('hidden');
-        tip.style.opacity = '1';
-    }
+    if (!show) resetDrone();
 }
 
 function toggleHelp() {
@@ -460,14 +377,34 @@ document.getElementById('skillList').addEventListener('click', (e) => {
 });
 
 document.getElementById('btnStart').addEventListener('click', () => {
-    levelIdx = getSelectedLevel();
+    levelIdx = parseInt(document.querySelector('input[name="level"]:checked')?.value ?? '0', 10);
     showMenu(false);
 });
 
 document.getElementById('btnMenu').addEventListener('click', () => showMenu(true));
+document.getElementById('btnPower').addEventListener('click', () => showMenu(true));
 document.getElementById('btnReset').addEventListener('click', () => resetDrone());
 document.getElementById('btnHelp').addEventListener('click', () => toggleHelp());
 document.getElementById('btnHelpClose').addEventListener('click', () => toggleHelp());
+
+document.getElementById('btnWind').addEventListener('click', () => {
+    const chk = document.getElementById('chkWind');
+    chk.checked = !chk.checked;
+    chk.dispatchEvent(new Event('change'));
+});
+
+document.getElementById('chkPath').addEventListener('change', (e) => { showPathGuide = e.target.checked; });
+document.getElementById('chkGrid').addEventListener('change', (e) => { showGrid = e.target.checked; });
+document.getElementById('chkWind').addEventListener('change', (e) => {
+    if (e.target.checked) { windStrength = 0.4 + Math.random() * 0.5; windAngle = Math.random() * Math.PI * 2; }
+    else { windStrength = 0; }
+    updateWindDial();
+});
+
+document.getElementById('windSlider').addEventListener('input', (e) => {
+    windStrength = parseFloat(e.target.value) / 10;
+    updateWindDial();
+});
 
 buildLevelList();
 requestAnimationFrame(loop);
