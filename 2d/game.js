@@ -17,6 +17,7 @@ let finished = false;
 let cpIndex = 0;
 let elapsed = 0;
 let landTimer = 0;
+let landHoldToastShown = false;
 let showPathGuide = true;
 let showGrid = true;
 let showMapTiles = false;
@@ -61,6 +62,8 @@ function resetDrone() {
     elapsed = 0;
     finished = false;
     landTimer = 0;
+    landHoldToastShown = false;
+    hideActionToast();
     if (lv.defaultWind) {
         windStrength = lv.defaultWind.strength;
         windAngle = lv.defaultWind.angle;
@@ -131,6 +134,19 @@ function updateHud() {
     document.getElementById('altVal').textContent = `${Math.round(drone.alt * 120)}m`;
     updateObjective();
     updateStickHud();
+    updateFinishOverlay();
+}
+
+function updateFinishOverlay() {
+    const el = document.getElementById('finishOverlay');
+    if (!el) return;
+    if (finished) {
+        el.classList.remove('hidden');
+        const t = document.getElementById('finishTime');
+        if (t) t.textContent = formatTime(elapsed);
+    } else {
+        el.classList.add('hidden');
+    }
 }
 
 function update(dt) {
@@ -221,27 +237,82 @@ function pushOutOfRect(d, r) {
 function checkCheckpoints() {
     const cps = level().checkpoints;
     if (!cps.length || cpIndex >= cps.length) return;
-    if (Math.hypot(drone.x - cps[cpIndex].x, drone.y - cps[cpIndex].y) < cps[cpIndex].r) {
+    const cp = cps[cpIndex];
+    if (Math.hypot(drone.x - cp.x, drone.y - cp.y) < cp.r) {
+        const isLast = cpIndex + 1 >= cps.length;
+        const hasLanding = !!level().landing;
+        showActionToast(checkpointPassMessage(cp, isLast, hasLanding));
         cpIndex++;
-        if (cpIndex >= cps.length && !level().landing) finished = true;
+        if (cpIndex >= cps.length && !hasLanding) finished = true;
     }
 }
 
 function checkLanding(dt) {
     const land = level().landing;
     if (!land || cpIndex < level().checkpoints.length) return;
-    const dist = Math.hypot(drone.x - land.x, drone.y - land.y);
-    if (dist < land.r && Math.hypot(drone.vx, drone.vy) < 40 && drone.alt < 0.35) {
+    if (isLandingHoldOk(land)) {
+        if (!landHoldToastShown) {
+            showActionToast(landingHoldMessage(land), 3200);
+            landHoldToastShown = true;
+        }
         landTimer += dt;
-        if (landTimer >= land.holdSec) finished = true;
+        if (landTimer >= land.holdSec) {
+            showActionToast('✓ Hạ cánh an toàn · hoàn thành nhiệm vụ', 2200);
+            finished = true;
+        }
     } else {
         landTimer = 0;
+        landHoldToastShown = false;
     }
 }
 
 function formatTime(t) {
     const m = Math.floor(t / 60);
     return `${String(m).padStart(2, '0')}:${(t - m * 60).toFixed(1).padStart(4, '0')}`;
+}
+
+let toastTimer = null;
+
+function hideActionToast() {
+    const el = document.getElementById('actionToast');
+    if (!el) return;
+    el.classList.remove('show');
+    if (toastTimer) {
+        clearTimeout(toastTimer);
+        toastTimer = null;
+    }
+    setTimeout(() => { el.classList.add('hidden'); }, 260);
+}
+
+/** Popup nhỏ khi học viên làm đúng thao tác */
+function showActionToast(text, duration = 2800) {
+    const el = document.getElementById('actionToast');
+    if (!el) return;
+    el.textContent = text;
+    el.classList.remove('hidden');
+    requestAnimationFrame(() => el.classList.add('show'));
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(hideActionToast, duration);
+}
+
+function isLandingHoldOk(land) {
+    const dist = Math.hypot(drone.x - land.x, drone.y - land.y);
+    const speed = Math.hypot(drone.vx, drone.vy);
+    const altMax = land.altMax ?? 0.35;
+    const speedMax = land.speedMax ?? 40;
+    return dist < land.r && speed < speedMax && drone.alt < altMax;
+}
+
+function landingHoldMessage(land) {
+    const label = land.label ?? 'Bãi H';
+    return `✓ Đúng thao tác · ${label} · giữ ga thấp ${land.holdSec}s`;
+}
+
+function checkpointPassMessage(cp, isLast, hasLanding) {
+    const label = cp.label ?? 'điểm';
+    if (isLast && !hasLanding) return `✓ Đúng thao tác · hoàn thành lộ trình`;
+    if (isLast && hasLanding) return `✓ Đúng thao tác · ${label} · tiếp tục hạ cánh`;
+    return `✓ Đúng thao tác · qua ${label}`;
 }
 
 function drawArenaBackground() {
@@ -477,15 +548,13 @@ function drawDrone() {
 }
 
 function drawFinishBanner() {
-    if (!finished) return;
-    ctx.fillStyle = 'rgba(0,0,0,0.45)';
-    ctx.fillRect(arenaRect.x, arenaRect.y, arenaRect.w, arenaRect.h);
-    ctx.fillStyle = '#fff';
-    ctx.font = 'bold 24px Segoe UI, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('✓ HOÀN THÀNH', canvas.width / 2, canvas.height / 2 - 8);
-    ctx.font = '18px monospace';
-    ctx.fillText(formatTime(elapsed), canvas.width / 2, canvas.height / 2 + 24);
+    /* Hoàn thành hiển thị qua #finishOverlay (HTML) */
+}
+
+function exitToMainMenu() {
+    document.getElementById('helpOverlay')?.classList.add('hidden');
+    hideActionToast();
+    showMenu(true);
 }
 
 function render() {
@@ -576,10 +645,15 @@ document.getElementById('btnStart').addEventListener('click', () => {
 });
 
 document.getElementById('btnMenu').addEventListener('click', () => showMenu(true));
-document.getElementById('btnPower').addEventListener('click', () => showMenu(true));
+document.getElementById('btnPower').addEventListener('click', () => exitToMainMenu());
+document.getElementById('objExit')?.addEventListener('click', () => exitToMainMenu());
+document.getElementById('btnFinishMenu')?.addEventListener('click', () => exitToMainMenu());
+document.getElementById('btnFinishClose')?.addEventListener('click', () => exitToMainMenu());
+document.getElementById('btnFinishRetry')?.addEventListener('click', () => resetDrone());
 document.getElementById('btnReset').addEventListener('click', () => resetDrone());
 document.getElementById('btnHelp').addEventListener('click', () => toggleHelp());
 document.getElementById('btnHelpClose').addEventListener('click', () => toggleHelp());
+document.getElementById('btnHelpX')?.addEventListener('click', () => toggleHelp());
 
 document.getElementById('btnWind').addEventListener('click', () => {
     const chk = document.getElementById('chkWind');

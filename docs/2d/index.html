@@ -2,15 +2,15 @@
 <html lang="vi">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Huấn luyện drone 2D — BQP Việt Nam">
     <link rel="icon" type="image/x-icon" href="../media/favicon.ico">
     <title>BQP VN — Huấn luyện Drone 2D</title>
     <style>
         :root {
-        --sand: #a89576;
-        --sidebar: rgba(22, 22, 26, 0.88);
-        --panel: rgba(248, 250, 252, 0.94);
+            --sand: #b8a88a;
+            --sidebar: rgba(30, 30, 35, 0.82);
+            --panel: rgba(255, 255, 255, 0.92);
             --text: #1f2937;
             --muted: #6b7280;
             --accent: #2563eb;
@@ -28,7 +28,6 @@
             margin-left: 52px;
             width: calc(100% - 52px);
             height: 100%;
-            touch-action: none;
         }
 
         /* ── Sidebar trái ── */
@@ -53,9 +52,7 @@
         }
         .ui-card {
             background: var(--panel); border-radius: 8px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.18);
-            border: 1px solid rgba(255,255,255,0.65);
-            backdrop-filter: blur(6px);
+            box-shadow: 0 2px 12px rgba(0,0,0,0.15);
             padding: 10px 12px; font-size: 0.78rem;
         }
         .ui-card h4 { margin: 0 0 6px; font-size: 0.72rem; color: var(--muted); font-weight: 600; text-transform: uppercase; }
@@ -176,25 +173,8 @@
 
         .levels { display: flex; flex-direction: column; gap: 6px; margin: 10px 0; }
         .levels label {
-            display: flex; gap: 10px; padding: 10px 14px;
+            display: flex; gap: 10px; padding: 10px 12px;
             border: 1px solid #e5e7eb; border-radius: 8px; cursor: pointer;
-            align-items: flex-start; overflow: visible;
-        }
-        .levels label input[type="radio"] {
-            flex-shrink: 0; margin-top: 4px;
-        }
-        .levels label > span {
-            flex: 1; min-width: 0;
-            line-height: 1.5; overflow: visible;
-        }
-        .levels label strong {
-            display: block; margin-bottom: 3px;
-            line-height: 1.35;
-        }
-        .levels label small {
-            display: block; font-size: 0.8rem; color: #6b7280;
-            line-height: 1.45; overflow-wrap: break-word;
-            word-break: normal; padding-right: 2px;
         }
         .levels label:hover, .levels label:has(input:checked) {
             border-color: var(--accent); background: #eff6ff;
@@ -239,54 +219,6 @@
         .features-box li { margin: 3px 0; }
         .branch-header { user-select: none; }
 
-        /* ── Cần ảo mobile / tablet ── */
-        #touchControls {
-            position: absolute; inset: 0; z-index: 18;
-            pointer-events: none; display: none;
-        }
-        #touchControls.active { display: block; }
-        .touch-zone {
-            position: absolute; bottom: 20px;
-            width: min(132px, 26vw); height: min(132px, 26vw);
-            border-radius: 50%;
-            background: rgba(30, 30, 35, 0.45);
-            border: 2px solid rgba(255, 255, 255, 0.25);
-            pointer-events: auto;
-            touch-action: none;
-            user-select: none;
-        }
-        .touch-left { left: 58px; }
-        .touch-right { right: 10px; }
-        .touch-knob {
-            position: absolute; left: 50%; top: 50%;
-            width: 44%; height: 44%; border-radius: 50%;
-            background: rgba(37, 99, 235, 0.75);
-            border: 2px solid rgba(255, 255, 255, 0.85);
-            transform: translate(-50%, -50%);
-            pointer-events: none;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-        }
-        .touch-label {
-            position: absolute; bottom: -18px; left: 0; right: 0;
-            text-align: center; font-size: 0.62rem;
-            color: rgba(255,255,255,0.65); font-weight: 600;
-            pointer-events: none;
-        }
-
-        @media (hover: none) and (pointer: coarse), (max-width: 768px) {
-            #stickPanel { display: none; }
-            #topRight { top: 8px; right: 8px; gap: 6px; }
-            #topRight .ui-card { padding: 6px 8px; font-size: 0.7rem; }
-            #windDial { width: 48px; height: 48px; }
-            #objective { max-width: 210px; padding: 6px 10px; left: 58px; top: 8px; }
-            #objective .text { font-size: 0.85rem; }
-            #stats { left: 58px; bottom: 8px; padding: 6px 10px; font-size: 0.68rem; }
-            #altPanel { right: 8px; bottom: 160px; padding: 6px 8px; }
-            #altBar { height: 80px; }
-            #companyFooter { font-size: 0.58rem; right: 8px; bottom: 4px; max-width: 42vw; }
-            #companyHud { left: 58px; font-size: 0.58rem; }
-        }
-
         .hidden { display: none !important; }
     </style>
 </head>
@@ -324,8 +256,6 @@
                 <h4>Guide View</h4>
                 <label><input type="checkbox" id="chkPath" checked> Đường trinh sát</label>
                 <label><input type="checkbox" id="chkGrid" checked> Lưới sân</label>
-                <label><input type="checkbox" id="chkMap"> Ảnh vệ tinh</label>
-                <small id="mapLoadStatus" style="display:block;color:var(--muted);margin-top:2px"></small>
                 <label><input type="checkbox" id="chkWind"> Gió / ECM</label>
             </div>
         </div>
@@ -344,9 +274,9 @@
                 <div class="stick-keys">W/S Ga · A/D Xoay</div>
             </div>
             <div class="stick-box">
-                <div class="lbl">CẦN PHẢI · theo mũi</div>
+                <div class="lbl">CẦN PHẢI</div>
                 <div class="stick"><div class="stick-dot" id="dotR"></div></div>
-                <div class="stick-keys">↑ Tiến mũi · ↓ Lùi · ←→ Sang trái/phải</div>
+                <div class="stick-keys">↑↓ Tiến/Lùi · ←→ Nghiêng</div>
             </div>
         </div>
 
@@ -358,28 +288,19 @@
 
         <div id="companyHud">Đông A Tech</div>
         <div id="companyFooter">Công Ty TNHH Công Nghệ Đông A</div>
-
-        <div id="touchControls">
-            <div class="touch-zone touch-left" id="touchLeft">
-                <div class="touch-knob" id="knobLeft"></div>
-                <span class="touch-label">Ga · Xoay</span>
-            </div>
-            <div class="touch-zone touch-right" id="touchRight">
-                <div class="touch-knob" id="knobRight"></div>
-                <span class="touch-label">Tiến · Nghiêng</span>
-            </div>
-        </div>
     </div>
 
     <!-- Menu chính -->
     <div id="menuOverlay" class="overlay">
         <div class="panel">
-            <span class="badge">BQP VN · Huấn luyện UAV tác chiến</span>
-            <h1>HL UAV tác chiến — Kịch bản theo đơn vị</h1>
-            <p>Mô phỏng <strong>VLOS tác chiến</strong>: trinh sát · chống UAV bay thấp · bảo vệ mục tiêu · liên hợp đa phương. Đe dọa <strong>m/ph hướng Đ</strong> · yểm trợ <strong>◆US ◆RU m/ph</strong>.</p>
+            <span class="badge">BQP VN · Huấn luyện UAV 2D</span>
+            <h1>Huấn luyện UAV 2D — Kịch bản tác chiến</h1>
+            <p>Mô phỏng <strong>huấn luyện VLOS</strong> cho cán bộ, chiến sĩ: trinh sát tình hình, phản ứng UAV bay thấp, bảo vệ mục tiêu trọng yếu, né vùng đe dọa. Bám tư tưởng <em>phát hiện sớm · cảnh báo nhanh · chế áp kịp thời</em>.</p>
             <p style="font-size:0.82rem;color:#6b7280">
-                🔴 Vùng đỏ = UAV địch m/ph · 🟢 🇻🇳 = ta ·
-                🔵 MTTQ · ≋ Biển Đông
+                🔴 Vùng đỏ = đe dọa UAV mô phỏng (hướng <strong>Đ</strong>) ·
+                🟢 Căn cứ VN / điểm yểm trợ ·
+                🔵 MTTQ = mục tiêu cần bảo vệ ·
+                ≋ Biển = kịch bản hải quân
             </p>
 
             <div class="features-box">
@@ -405,7 +326,10 @@
                 </svg>
             </div>
 
-            <h2>Chọn kịch bản</h2>
+            <h2>Chọn khóa huấn luyện</h2>
+            <p style="font-size:0.8rem;color:#6b7280;margin:0 0 6px">
+                Phân theo quân chủng: Cơ sở · Bộ đội · PK-KQ · Hải quân · Liên hợp (yểm trợ ◆ Mỹ/Nga mô phỏng)
+            </p>
             <div class="levels" id="levelList"></div>
 
             <h2>Cấp độ</h2>
@@ -426,26 +350,23 @@
             <p><strong>Mode 2</strong> (chuẩn radio VLOS):</p>
             <ul>
                 <li><strong>Cần trái:</strong> W/S = Ga · A/D = Xoay (Yaw)</li>
-                <li><strong>Cần phải:</strong> ↑↓ = Tiến/Lùi <em>theo hướng mũi</em> · ←→ = Sang trái/phải (không phải theo màn hình)</li>
-                <li><strong>Mũi drone:</strong> tam giác trắng + cánh cam phía trước · đuôi thanh đen · la bàn góc sân (kim xanh = mũi)</li>
+                <li><strong>Cần phải:</strong> ↑↓ = Tiến/Lùi · ←→ = Nghiêng (Roll)</li>
                 <li><strong>Tay cầm Xbox/PS:</strong> cần trái + phải map tương tự</li>
-                <li><strong>📱 Mobile / tablet:</strong> cần ảo kép góc dưới màn hình (Ga·Xoay trái · Tiến·Nghiêng phải)</li>
-                <li><strong>R</strong> = Reset · <strong>H</strong> = Trợ giúp · sidebar ↺ trên mobile</li>
+                <li><strong>R</strong> = Reset · <strong>H</strong> = Trợ giúp</li>
             </ul>
-            <p>Bay qua <strong>điểm QS</strong> (vòng trắng). Tránh <strong>vùng đỏ</strong> (UAV m/ph). Hạ cánh tại <strong>H</strong>.</p>
-            <h2>Nhóm kịch bản (BQP)</h2>
+            <p>Bay qua các <strong>điểm QS/trinh sát</strong> (vòng trắng). Tránh <strong>vùng đỏ</strong> (UAV địch mô phỏng). Hạ cánh tại <strong>H</strong>.</p>
+            <h2>Quân chủng &amp; tác chiến liên hợp</h2>
             <ul>
-                <li><strong>🎓 Cơ sở HL:</strong> VLOS · hạ cánh</li>
-                <li><strong>🛡️ QB Biên phòng:</strong> tuần biên · UAV xâm nhập</li>
-                <li><strong>✈️ QA PK-KQ:</strong> VQ2 · Tr.228 · chống bay thấp</li>
-                <li><strong>⚓ HQ · CSB:</strong> cảng · tàu · đường biển</li>
-                <li><strong>🗺️ Quân khu:</strong> QK4 KD Vinh · QK5 KV Đà Nẵng · KT Thủ đô</li>
+                <li><strong>🇻🇳 Bộ đội:</strong> trinh sát VLOS, bảo vệ MTTQ, né bầy đàn UAV</li>
+                <li><strong>✈️ PK-KQ:</strong> hiệp đồng radar VQ2, chế áp UAV bay thấp (Trung đoàn 228/280 mô phỏng)</li>
+                <li><strong>⚓ Hải quân:</strong> tuần tra ven biển, bảo vệ cảng/tàu — vùng ≋ biển</li>
+                <li><strong>🤝 Liên hợp:</strong> VN chủ trì + điểm yểm trợ <strong>◆</strong> (Mỹ/Nga mô phỏng huấn luyện liên minh, không phải cờ quốc gia thật)</li>
             </ul>
-            <p style="font-size:0.82rem;color:#6b7280">m/ph = mô phỏng huấn luyện · UAV địch hướng Đông / biển Đông.</p>
+            <p style="font-size:0.82rem;color:#6b7280">◆ = điểm yểm trợ liên minh (mô phỏng). Nhiệm vụ huấn luyện phòng thủ Tổ quốc.</p>
             <button type="button" class="primary" id="btnHelpClose">Đã hiểu</button>
         </div>
     </div>
 </div>
-<script type="module" src="./game.js"></script>
+<script type="module" src="./game.js?v=20260531"></script>
 </body>
 </html>
