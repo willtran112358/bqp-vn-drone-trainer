@@ -49,8 +49,6 @@ export const BRANCH_ORDER = ['khoa-tuyen', 'co-so', 'bien-phong', 'pk-kq', 'hai-
 export const FEATURES = [
     { id: 'vectors', name: 'Vector hướng dẫn', desc: 'Lệnh · hướng · gia tốc · gió · tổng hợp' },
     { id: 'courses', name: 'Khóa tuyến', desc: 'S · tam giác · vuông · số 8' },
-    { id: 'aerial-bg', name: 'Ảnh nền HL', desc: '16 ảnh trên không tĩnh · chọn ngẫu nhiên' },
-    { id: 'motor-se', name: 'Âm thanh motor', desc: 'Tiếng cánh quạt theo ga (Web Audio)' },
     { id: 'vlos', name: 'Bay VLOS tác chiến', desc: 'Huấn luyện tầm nhìn trực tiếp — không FPV' },
 
     { id: 'wind', name: 'Gió / ECM', desc: 'Môi trường nhiễu · gió cản trở' },
