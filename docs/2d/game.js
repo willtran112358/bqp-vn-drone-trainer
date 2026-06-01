@@ -851,11 +851,18 @@ function toggleHelp() {
 }
 
 let wikiCategory = 'all';
+let wikiReturnToMenu = false;
 
 function mountWikiPanel() {
     const root = document.getElementById('wikiPanelRoot');
     if (!root) return;
-    root.innerHTML = renderWikiPanel(wikiCategory);
+    try {
+        root.innerHTML = renderWikiPanel(wikiCategory);
+    } catch (err) {
+        console.error('wiki render', err);
+        root.innerHTML = '<p class="wiki-empty">Không tải được thư viện. Thử tải lại trang.</p>';
+        return;
+    }
     root.querySelectorAll('.wiki-tab').forEach(btn => {
         btn.addEventListener('click', () => {
             wikiCategory = btn.dataset.wikiCat ?? 'all';
@@ -866,17 +873,25 @@ function mountWikiPanel() {
 
 function toggleWiki(force) {
     const el = document.getElementById('wikiOverlay');
+    const menu = document.getElementById('menuOverlay');
     if (!el) return;
     let open;
     if (force === true) open = true;
     else if (force === false) open = false;
     else open = el.classList.contains('hidden');
     if (open) {
+        wikiReturnToMenu = menu && !menu.classList.contains('hidden');
         mountWikiPanel();
-        el.classList.remove('hidden');
+        menu?.classList.add('hidden');
         document.getElementById('helpOverlay')?.classList.add('hidden');
+        el.classList.remove('hidden');
     } else {
         el.classList.add('hidden');
+        if (wikiReturnToMenu) {
+            menu?.classList.remove('hidden');
+            document.getElementById('gameUi')?.classList.add('hidden');
+            wikiReturnToMenu = false;
+        }
     }
 }
 
@@ -956,7 +971,6 @@ function buildFeatureList() {
             </div>
         </article>`
     ).join('');
-    el.querySelector('.feature-card--wiki')?.addEventListener('click', () => toggleWiki(true));
 }
 
 function startSelectedLevel() {
@@ -980,11 +994,10 @@ function onMenuCloseClick() {
 }
 
 function showMenu(show, opts = {}) {
-    const wikiFab = document.getElementById('wikiFab');
     if (show) {
+        document.getElementById('wikiOverlay')?.classList.add('hidden');
         document.getElementById('menuOverlay').classList.remove('hidden');
         document.getElementById('gameUi').classList.add('hidden');
-        wikiFab?.classList.add('hidden');
         setTouchControlsVisible(false);
         running = false;
         stopDroneAudio();
@@ -994,7 +1007,6 @@ function showMenu(show, opts = {}) {
 
     document.getElementById('menuOverlay').classList.add('hidden');
     document.getElementById('gameUi').classList.remove('hidden');
-    wikiFab?.classList.toggle('hidden', !isMobileLayout());
     setTouchControlsVisible(true);
     running = true;
     if (soundEnabled) resumeAudio();
@@ -1048,10 +1060,22 @@ document.getElementById('btnGuide')?.addEventListener('click', () => toggleGuide
 document.getElementById('btnHelp').addEventListener('click', () => toggleHelp());
 document.getElementById('btnHelpClose').addEventListener('click', () => toggleHelp());
 document.getElementById('btnHelpX')?.addEventListener('click', () => toggleHelp());
-document.getElementById('btnWiki')?.addEventListener('click', () => toggleWiki(true));
-document.getElementById('btnMenuWiki')?.addEventListener('click', () => toggleWiki(true));
-document.getElementById('wikiFab')?.addEventListener('click', () => toggleWiki(true));
-document.getElementById('btnWikiX')?.addEventListener('click', () => toggleWiki(false));
+function onWikiOpenClick(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleWiki(true);
+}
+
+document.getElementById('btnWiki')?.addEventListener('click', onWikiOpenClick);
+document.getElementById('btnMenuWiki')?.addEventListener('click', onWikiOpenClick);
+document.getElementById('btnWikiX')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    toggleWiki(false);
+});
+document.getElementById('wrap')?.addEventListener('click', (e) => {
+    const t = e.target.closest('#btnMenuWiki, #btnWiki, .feature-card--wiki');
+    if (t) onWikiOpenClick(e);
+});
 
 document.getElementById('btnWind').addEventListener('click', () => {
     const chk = document.getElementById('chkWind');
