@@ -6,7 +6,8 @@ import {
 } from './drone-sprite.js';
 import { drawCompassRose, drawArenaGround, drawMapAttribution } from './terrain.js';
 import {
-    preloadMapTiles, isMapReady, isMapLoading, getMapLoadError, invalidateMapCache,
+    preloadMapTiles, isMapReady, isMapLoading, getMapLoadError, getMapAttribution,
+    invalidateMapCache,
 } from './map-tiles.js';
 import { drawCourseTrack } from './course-geometry.js';
 import { drawFlightGuides, drawInputHints } from './flight-guides.js';
@@ -877,7 +878,7 @@ function setMapTiles(on) {
         return;
     }
     if (isMapReady()) {
-        setMapStatus('✓ Vệ tinh');
+        setMapStatus('✓ Ảnh nền');
         return;
     }
     if (mapLoading || isMapLoading()) return;
@@ -893,7 +894,10 @@ function setMapTiles(on) {
                 setMapStatus('');
                 return;
             }
-            if (isMapReady()) setMapStatus('✓ Vệ tinh');
+            if (isMapReady()) {
+                const label = getMapAttribution().split(' · ')[0];
+                setMapStatus(`✓ ${label}`);
+            }
             else {
                 setMapStatus(getMapLoadError() ? '✗ Lỗi — thử lại' : '');
                 if (chk) chk.checked = false;

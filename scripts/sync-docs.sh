@@ -15,6 +15,7 @@ cat > docs/index.html <<'EOF'
 </html>
 EOF
 cp -r 2d/* docs/2d/
+cp -r 2d/assets docs/2d/ 2>/dev/null || true
 cp media/favicon.ico docs/media/
 touch docs/.nojekyll
 echo "Synced 2d -> docs/"

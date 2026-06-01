@@ -1,18 +1,5 @@
 /**
- * Sao chép file này thành config.local.js (đã gitignore) để tùy chỉnh nền bản đồ.
- *
- * Nguồn miễn phí:
- * - provider: 'esri'  — ảnh vệ tinh, KHÔNG cần key (mặc định)
- * - provider: 'osm'    — bản đồ đường phố OpenStreetMap, KHÔNG cần key
- *
- * MapTiler (free ~100k tile/tháng): https://cloud.maptiler.com/
- * - provider: 'maptiler-satellite'
- * - maptilerKey: 'YOUR_KEY'
+ * File tùy chọn — sao chép thành config.local.js (đã gitignore).
+ * Ảnh nền trên không dùng 16 file tĩnh trong assets/maps/ (không cần API).
+ * Chạy lại: python scripts/generate-static-maps.py
  */
-export const MAP_CONFIG = {
-    center: { lat: 16.0544, lon: 108.2022 },
-    spanM: { w: 1100, h: 825 },
-    zoom: 17,
-    provider: 'esri',
-    maptilerKey: '',
-};
