@@ -2,6 +2,7 @@
  * Thư viện tra cứu UAV / UCAV — bối cảnh Biển Đông & HL BQP VN
  * Dữ liệu tóm lược từ tài liệu mở (Wikipedia, báo chí quốc phòng).
  */
+import { WIKI_IMAGES } from './wiki-images.js';
 
 /** Ghi chú kiến trúc mô phỏng (đối chiếu levels.js + game.js) */
 export const SIM_ARCHITECTURE = {
@@ -89,6 +90,7 @@ export const WIKI_ARTICLES = [
         subtitle: 'UAV cảm tử · trinh sát–tấn công',
         tags: ['🇻🇳', 'cảm tử'],
         specs: 'Sải cánh 1,5 m · dài 1,1 m · MTOW 8 kg · 40 phút · tốc độ tấn công ~130 km/h',
+        imageNote: 'Ảnh minh họa loại cảm tử tương đương (Wikipedia); VU-C2 là biến thể Viettel.',
         body: `UAV cảm tử do Viettel phát triển (2024), phục vụ Lục quân VN.
 
 **Tính năng:** động cơ điện (ít tiếng/ít IR); đầu dẫn quang + AI khóa mục tiêu; kết hợp trinh sát và tấn công; có thể thu hồi nếu chưa tấn công.
@@ -252,6 +254,18 @@ function formatBody(text) {
         .replace(/\n/g, '<br>');
 }
 
+function wikiFigure(article) {
+    const img = WIKI_IMAGES[article.id];
+    if (!img?.file) return '';
+    const note = article.imageNote
+        ? `<span class="wiki-img-note">${escapeHtml(article.imageNote)}</span>`
+        : '';
+    return `<figure class="wiki-figure">
+        <img src="${escapeHtml(img.file)}" alt="${escapeHtml(img.alt || article.title)}" loading="lazy" decoding="async" width="320" height="180">
+        <figcaption>${escapeHtml(img.credit)} · CC BY-SA Wikipedia${note ? `<br>${note}` : ''}</figcaption>
+    </figure>`;
+}
+
 /**
  * @param {string} categoryId
  * @returns {string}
@@ -267,6 +281,7 @@ export function renderWikiArticles(categoryId = 'all') {
 
     return items.map(a => `
         <article class="wiki-article" id="wiki-${a.id}">
+            ${wikiFigure(a)}
             <header class="wiki-article-head">
                 <h3>${escapeHtml(a.title)}</h3>
                 ${a.subtitle ? `<p class="wiki-sub">${escapeHtml(a.subtitle)}</p>` : ''}
@@ -297,6 +312,6 @@ export function renderWikiPanel(activeCategory = 'all') {
         </div>
         <div class="wiki-tabs" role="tablist">${tabs}</div>
         <div class="wiki-articles">${renderWikiArticles(activeCategory)}</div>
-        <p class="wiki-foot">Nguồn tóm lược: Wikipedia, báo quốc phòng VN (2024). Chỉ dùng cho HL — không thay tài liệu mật.</p>
+        <p class="wiki-foot">Nguồn tóm lược: Wikipedia (ảnh CC BY-SA), báo quốc phòng VN (2024). Chỉ dùng cho HL — không thay tài liệu mật.</p>
     `;
 }
