@@ -44,21 +44,22 @@ export function drawDroneTopDown(ctx, x, y, angle, scale, alt, throttle, highCon
 
 
 
-    // bóng đổ
+    // bóng đổ — offset theo độ cao (cao hơn = bóng xa & mờ hơn)
+    const altFactor = Math.max(0.05, Math.min(1, alt));
+    const shX = (5 + altFactor * 14) * s;
+    const shY = (7 + altFactor * 18) * s;
+    const shAlpha = 0.14 + (1 - altFactor) * 0.2;
+    const shScale = 0.75 + (1 - altFactor) * 0.28;
 
     ctx.save();
-
-    ctx.translate(4 * s, 6 * s);
-
-    ctx.fillStyle = 'rgba(0,0,0,0.22)';
-
+    ctx.translate(shX, shY);
+    ctx.filter = `blur(${Math.max(1, 3 * s * (0.5 + altFactor))}px)`;
+    ctx.fillStyle = `rgba(0,0,0,${shAlpha})`;
     ctx.beginPath();
-
-    ctx.ellipse(0, 0, armLen * 1.1, armLen * 0.65, 0, 0, Math.PI * 2);
-
+    ctx.ellipse(0, 0, armLen * 1.1 * shScale, armLen * 0.65 * shScale, 0, 0, Math.PI * 2);
     ctx.fill();
-
     ctx.restore();
+    ctx.filter = 'none';
 
 
 

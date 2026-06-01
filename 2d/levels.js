@@ -1,12 +1,8 @@
 /**
-
  * Kịch bản huấn luyện UAV tác chiến — BQP Việt Nam
-
  * Phát triển bởi Công Ty TNHH Công Nghệ Đông A
-
  */
-
-
+import { buildCourseLevels } from './course-geometry.js';
 
 export const COMPANY = {
 
@@ -27,7 +23,7 @@ export const THREAT_BEARING = 'Đ';
 
 
 export const BRANCHES = {
-
+    'khoa-tuyen': { name: 'Khóa tuyến bay', icon: '📐', color: '#0d9488', hint: 'S · hình học · số 8 — tham khảo khóa VLOS' },
     'co-so': { name: 'Cơ sở HL', icon: '🎓', color: '#6b7280', hint: 'Làm quen VLOS trước tác chiến' },
 
     'bien-phong': { name: 'Biên phòng QB', icon: '🛡️', color: '#15803d', hint: 'Tuần biên · UAV xâm nhập' },
@@ -46,12 +42,14 @@ export const BRANCHES = {
 
 /** Nhóm hiển thị menu (ẩn liên hợp nước ngoài) */
 
-export const BRANCH_ORDER = ['co-so', 'bien-phong', 'pk-kq', 'hai-quan', 'quan-khu'];
+export const BRANCH_ORDER = ['khoa-tuyen', 'co-so', 'bien-phong', 'pk-kq', 'hai-quan', 'quan-khu'];
 
 
 
 export const FEATURES = [
-
+    { id: 'vectors', name: 'Vector hướng dẫn', desc: 'Lệnh · hướng · gia tốc · gió · tổng hợp' },
+    { id: 'courses', name: 'Khóa tuyến bay', desc: 'S-curve · tam giác · số 8 · xoay chỗ' },
+    { id: 'motor-se', name: 'Âm thanh motor', desc: 'Tiếng cánh quạt theo ga (Web Audio)' },
     { id: 'vlos', name: 'Bay VLOS tác chiến', desc: 'Huấn luyện tầm nhìn trực tiếp — không FPV' },
 
     { id: 'wind', name: 'Gió / ECM', desc: 'Môi trường nhiễu · gió cản trở' },
@@ -70,10 +68,11 @@ export const FEATURES = [
 
 
 
+const COURSE_LEVELS = buildCourseLevels();
+
 export const LEVELS = [
-
+    ...COURSE_LEVELS,
     {
-
         id: 'co-so-vlos',
 
         branch: 'co-so',

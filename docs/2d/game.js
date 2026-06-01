@@ -6,6 +6,9 @@ import {
 } from './drone-sprite.js';
 import { drawCompassRose, drawArenaGround, drawMapAttribution } from './terrain.js';
 import { preloadMapTiles, isMapReady, isMapLoading, getMapLoadError } from './map-tiles.js';
+import { drawCourseTrack } from './course-geometry.js';
+import { drawFlightGuides, drawInputHints } from './flight-guides.js';
+import { resumeAudio, updateDroneAudio, stopDroneAudio, setBodyVolume, setWindVolume } from './drone-audio.js';
 
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
@@ -27,8 +30,22 @@ let windAngle = 0;
 let inThreatZone = false;
 let threatPulse = 0;
 let menuCanResume = false;
+let showGuidePlayer = true;
+let showGuideWind = true;
+let showInputHints = true;
+let soundEnabled = true;
+let pirouetteYawAccum = 0;
 
 const drone = { x: 400, y: 300, angle: 0, vx: 0, vy: 0, alt: 0.5 };
+let prevVx = 0;
+let prevVy = 0;
+const guideVectors = {
+    input: { x: 0, y: 0 },
+    orientation: { x: 0, y: 0 },
+    acceleration: { x: 0, y: 0 },
+    wind: { x: 0, y: 0 },
+    composite: { x: 0, y: 0 },
+};
 let scale = 1, offsetX = 0, offsetY = 0;
 let arenaRect = { x: 0, y: 0, w: 0, h: 0 };
 
@@ -77,6 +94,8 @@ function resetDrone() {
     finished = false;
     landTimer = 0;
     landHoldToastShown = false;
+    pirouetteYawAccum = 0;
+    prevVx = prevVy = 0;
     hideActionToast();
     if (lv.defaultWind) {
         windStrength = lv.defaultWind.strength;
@@ -100,6 +119,15 @@ function getObjectiveText() {
     const cps = lv.checkpoints;
     if (finished) return { main: '✓ Hoàn thành nhiệm vụ!', sub: `${formatTime(elapsed)} · ${lv.doctrine ?? ''}` };
     if (inThreatZone) return { main: '⚠ Vùng đe dọa — thoát ngay!', sub: 'UAV địch mô phỏng · hướng ' + THREAT_BEARING };
+    if (lv.pirouette && !finished) {
+        const need = (lv.pirouette.revolutions ?? 1) * Math.PI * 2;
+        const prog = Math.min(1, pirouetteYawAccum / need);
+        return {
+            main: 'Xoay tại chỗ · giữ vị trí',
+            sub: `${Math.round(prog * 100)}% · ${lv.doctrine ?? ''}`,
+        };
+    }
+    if (lv.freeFlight) return { main: lv.name, sub: 'Sân tự do · R = reset' };
     if (!cps.length) return { main: lv.name, sub: lv.doctrine ?? 'Luyện ga · xoay · VLOS' };
     if (lv.landing && cpIndex >= cps.length) {
         return {
@@ -168,8 +196,19 @@ function update(dt) {
     const inp = readInputs();
     if (inp.reset) resetDrone();
     if (consumeKey('h')) toggleHelp();
+    if (consumeKey('tab')) {
+        showInputHints = !showInputHints;
+        const el = document.getElementById('chkInputHints');
+        if (el) el.checked = showInputHints;
+    }
 
-    updatePropAnimation(dt, (inp.throttle * 0.5 + 0.5));
+    const throttleNorm = inp.throttle * 0.5 + 0.5;
+    updatePropAnimation(dt, throttleNorm);
+    if (soundEnabled && running) {
+        updateDroneAudio(throttleNorm, windStrength, true);
+    } else {
+        stopDroneAudio();
+    }
 
     if (finished) { updateHud(); return; }
 
@@ -198,10 +237,18 @@ function update(dt) {
         drone.vy += Math.sin(windAngle) * windStrength * 18 * dt;
     }
 
+    const ax = (drone.vx - prevVx) / Math.max(dt, 0.001);
+    const ay = (drone.vy - prevVy) / Math.max(dt, 0.001);
+    prevVx = drone.vx;
+    prevVy = drone.vy;
+
     drone.vx *= s.drag;
     drone.vy *= s.drag;
     drone.x += drone.vx * dt;
     drone.y += drone.vy * dt;
+
+    updateGuideVectors(inp, p, r, ax, ay);
+    checkPirouette(inp, dt);
 
     const m = ARENA.margin;
     if (drone.x < m) { drone.x = m; drone.vx *= -0.3; }
@@ -220,6 +267,62 @@ function update(dt) {
     checkLanding(dt);
     checkThreatZones();
     updateHud();
+}
+
+function updateGuideVectors(inp, pitch, roll, ax, ay) {
+    const orientMag = Math.hypot(pitch, roll);
+    const inpMag = Math.hypot(inp.pitch, inp.roll) + Math.abs(inp.throttle) * 0.35 + Math.abs(inp.yaw) * 0.25;
+    const headX = Math.cos(drone.angle);
+    const headY = Math.sin(drone.angle);
+
+    guideVectors.input.x = headX * (-inp.pitch) + (-Math.sin(drone.angle)) * inp.roll;
+    guideVectors.input.y = headY * (-inp.pitch) + Math.cos(drone.angle) * inp.roll;
+    if (inpMag < 0.05) {
+        guideVectors.input.x = guideVectors.input.y = 0;
+    } else {
+        const m = Math.hypot(guideVectors.input.x, guideVectors.input.y) || 1;
+        const s = inpMag / m;
+        guideVectors.input.x *= s;
+        guideVectors.input.y *= s;
+    }
+
+    guideVectors.orientation.x = headX * (-pitch) + (-Math.sin(drone.angle)) * roll;
+    guideVectors.orientation.y = headY * (-pitch) + Math.cos(drone.angle) * roll;
+    if (orientMag < 0.02) {
+        guideVectors.orientation.x = guideVectors.orientation.y = 0;
+    }
+
+    guideVectors.acceleration.x = ax * 0.02;
+    guideVectors.acceleration.y = ay * 0.02;
+    guideVectors.wind.x = windStrength > 0 ? Math.cos(windAngle) * windStrength : 0;
+    guideVectors.wind.y = windStrength > 0 ? Math.sin(windAngle) * windStrength : 0;
+    guideVectors.composite.x = drone.vx * 0.015;
+    guideVectors.composite.y = drone.vy * 0.015;
+}
+
+function checkPirouette(inp, dt) {
+    const p = level().pirouette;
+    if (!p || finished) return;
+    const dist = Math.hypot(drone.x - p.x, drone.y - p.y);
+    if (dist > p.r) {
+        drone.vx *= 0.9;
+        drone.vy *= 0.9;
+        pushOutOfCircle(drone, p.x, p.y, p.r);
+    }
+    pirouetteYawAccum += Math.abs(inp.yaw) * skill().yawRate * dt;
+    const need = (p.revolutions ?? 1) * Math.PI * 2;
+    if (pirouetteYawAccum >= need) {
+        showActionToast('✓ Hoàn thành xoay tại chỗ', 2200);
+        finished = true;
+    }
+}
+
+function pushOutOfCircle(d, cx, cy, r) {
+    const dx = d.x - cx;
+    const dy = d.y - cy;
+    const dist = Math.hypot(dx, dy) || 1;
+    d.x = cx + (dx / dist) * (r - 2);
+    d.y = cy + (dy / dist) * (r - 2);
 }
 
 function checkThreatZones() {
@@ -534,6 +637,19 @@ function resetCanvasState() {
     ctx.setLineDash([]);
 }
 
+function drawDroneGuides() {
+    const [sx, sy] = worldToScreen(drone.x, drone.y);
+    drawFlightGuides(ctx, sx, sy, scale, guideVectors, {
+        player: showGuidePlayer,
+        wind: showGuideWind,
+    });
+    const anyInput = Math.abs(lastInputs.throttle) + Math.abs(lastInputs.yaw)
+        + Math.abs(lastInputs.pitch) + Math.abs(lastInputs.roll) > 0.12;
+    if (showInputHints && anyInput) {
+        drawInputHints(ctx, sx, sy, scale, lastInputs, true);
+    }
+}
+
 function drawDrone() {
     const [sx, sy] = worldToScreen(drone.x, drone.y);
     const throttle = lastInputs.throttle * 0.5 + 0.5;
@@ -578,9 +694,11 @@ function render() {
     drawAllyPosts();
     drawWindVectors();
     drawCourseMarkings();
+    drawCourseTrack(ctx, level(), scale, worldToScreen);
     drawObstacles();
     drawCheckpoints();
     drawDrone();
+    drawDroneGuides();
     drawFinishBanner();
     if (running) updateStickHud();
 }
@@ -644,6 +762,7 @@ function showMenu(show, opts = {}) {
         document.getElementById('gameUi').classList.add('hidden');
         setTouchControlsVisible(false);
         running = false;
+        stopDroneAudio();
         updateMenuResumeUi();
         return;
     }
@@ -652,6 +771,7 @@ function showMenu(show, opts = {}) {
     document.getElementById('gameUi').classList.remove('hidden');
     setTouchControlsVisible(true);
     running = true;
+    if (soundEnabled) resumeAudio();
     menuCanResume = false;
     updateMenuResumeUi();
     if (!opts.resume) resetDrone();
@@ -709,6 +829,24 @@ document.getElementById('btnWind').addEventListener('click', () => {
 
 document.getElementById('chkPath').addEventListener('change', (e) => { showPathGuide = e.target.checked; });
 document.getElementById('chkGrid').addEventListener('change', (e) => { showGrid = e.target.checked; });
+document.getElementById('chkGuidePlayer')?.addEventListener('change', (e) => { showGuidePlayer = e.target.checked; });
+document.getElementById('chkGuideWind')?.addEventListener('change', (e) => { showGuideWind = e.target.checked; });
+document.getElementById('chkInputHints')?.addEventListener('change', (e) => { showInputHints = e.target.checked; });
+document.getElementById('chkSound')?.addEventListener('change', (e) => {
+    soundEnabled = e.target.checked;
+    if (!soundEnabled) stopDroneAudio();
+    else if (running) resumeAudio();
+});
+document.getElementById('bodyVolSlider')?.addEventListener('input', (e) => {
+    setBodyVolume(parseFloat(e.target.value) / 100);
+    const n = document.getElementById('bodyVolVal');
+    if (n) n.textContent = (parseFloat(e.target.value) / 100).toFixed(2);
+});
+document.getElementById('windVolSlider')?.addEventListener('input', (e) => {
+    setWindVolume(parseFloat(e.target.value) / 100);
+    const n = document.getElementById('windVolVal');
+    if (n) n.textContent = (parseFloat(e.target.value) / 100).toFixed(2);
+});
 
 function setMapStatus(text) {
     const status = document.getElementById('mapLoadStatus');
@@ -762,6 +900,8 @@ document.getElementById('windSlider').addEventListener('input', (e) => {
     updateWindDial();
 });
 
+setBodyVolume(0.7);
+setWindVolume(0.7);
 buildLevelList();
 buildFeatureList();
 initTouchControls();

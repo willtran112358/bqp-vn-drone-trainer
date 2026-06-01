@@ -79,6 +79,12 @@
             margin: 4px 0; cursor: pointer; color: var(--text);
         }
         #guidePanel input { accent-color: var(--accent); }
+        .sound-row {
+            display: flex; align-items: center; gap: 6px; margin: 3px 0 0;
+            font-size: 0.68rem; color: var(--muted);
+        }
+        .sound-row input[type=range] { flex: 1; min-width: 0; }
+        .vol-num { font-family: monospace; font-size: 0.65rem; min-width: 2.2em; text-align: right; }
 
         /* ── Mục tiêu bay ── */
         #objective {
@@ -526,12 +532,26 @@
                 </div>
             </div>
             <div class="ui-card" id="guidePanel">
-                <h4>Guide View</h4>
+                <h4>Hướng dẫn bay</h4>
+                <label><input type="checkbox" id="chkGuidePlayer" checked> Vector UAV</label>
+                <label><input type="checkbox" id="chkGuideWind" checked> Vector gió</label>
+                <label><input type="checkbox" id="chkInputHints" checked> Mũi tên lệnh</label>
                 <label><input type="checkbox" id="chkPath" checked> Đường trinh sát</label>
                 <label><input type="checkbox" id="chkGrid" checked> Lưới sân</label>
                 <label><input type="checkbox" id="chkMap"> Ảnh vệ tinh</label>
                 <small id="mapLoadStatus" style="display:block;color:var(--muted);margin-top:2px"></small>
                 <label><input type="checkbox" id="chkWind"> Gió / ECM</label>
+                <label><input type="checkbox" id="chkSound" checked> Âm motor</label>
+                <div class="sound-row" title="Âm lượng motor">
+                    <span>Motor</span>
+                    <input type="range" id="bodyVolSlider" min="0" max="100" value="70">
+                    <span id="bodyVolVal" class="vol-num">0.70</span>
+                </div>
+                <div class="sound-row" title="Âm gió">
+                    <span>Gió SE</span>
+                    <input type="range" id="windVolSlider" min="0" max="100" value="70">
+                    <span id="windVolVal" class="vol-num">0.70</span>
+                </div>
             </div>
         </div>
 
@@ -655,9 +675,21 @@
                 <li><strong>Mũi drone:</strong> tam giác trắng + cánh cam phía trước · đuôi thanh đen · la bàn góc sân (kim xanh = mũi)</li>
                 <li><strong>Tay cầm Xbox/PS:</strong> cần trái + phải map tương tự</li>
                 <li><strong>📱 Mobile / tablet:</strong> cần ảo kép góc dưới màn hình (Ga·Xoay trái · Tiến·Nghiêng phải)</li>
-                <li><strong>R</strong> = Reset · <strong>H</strong> = Trợ giúp · sidebar ↺ trên mobile</li>
+                <li><strong>R</strong> = Reset · <strong>H</strong> = Trợ giúp · <strong>Tab</strong> = Ẩn/hiện mũi tên lệnh</li>
+            </ul>
+            <h2>Vector hướng dẫn (màu)</h2>
+            <ul>
+                <li><span style="color:#86efac">■ Lệnh</span> — đầu vào cần điều khiển</li>
+                <li><span style="color:#fb923c">■ Hướng</span> — nghiêng / hướng bay</li>
+                <li><span style="color:#60a5fa">■ Gia tốc</span> — thay đổi vận tốc</li>
+                <li><span style="color:#16a34a">■ Gió</span> — ảnh hưởng gió</li>
+                <li><span style="color:#f87171">■ Tổng hợp</span> — vận tốc thực tế</li>
             </ul>
             <p>Bay qua <strong>điểm QS</strong> (vòng trắng). Tránh <strong>vùng đỏ</strong> (UAV m/ph). Hạ cánh tại <strong>H</strong>.</p>
+            <h2>Khóa tuyến bay</h2>
+            <ul>
+                <li><strong>📐 Khóa tuyến:</strong> S ngang/dọc · tam giác · vuông · số 8 · khẩn cấp · xoay chỗ</li>
+            </ul>
             <h2>Nhóm kịch bản (BQP)</h2>
             <ul>
                 <li><strong>🎓 Cơ sở HL:</strong> VLOS · hạ cánh</li>
@@ -671,6 +703,6 @@
         </div>
     </div>
 </div>
-<script type="module" src="./game.js?v=20260531d"></script>
+<script type="module" src="./game.js?v=20260601a"></script>
 </body>
 </html>
