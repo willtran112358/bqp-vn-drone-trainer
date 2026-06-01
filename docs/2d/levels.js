@@ -414,13 +414,13 @@ export const LEVELS = [
 
         name: 'KT · Bảo vệ vùng Thủ đô',
 
-        desc: 'BTL Thủ đô Hà Nội — tuần MTTQ · UAV m/ph đa hướng',
+        desc: 'BTL Thủ đô Hà Nội — tuần khu vực trọng điểm · UAV m/ph đa hướng',
 
         doctrine: 'Bảo vệ Thủ đô · phát hiện sớm',
 
         spawn: { x: 400, y: 500, angle: -Math.PI / 2 },
 
-        protectZone: { x: 400, y: 280, r: 65, label: 'MTTQ' },
+        protectZone: { x: 400, y: 280, r: 65, label: 'Khu BV' },
 
         threatZones: [
 

@@ -248,7 +248,10 @@
             position: absolute;
             top: 10px;
             right: 10px;
-            z-index: 5;
+            z-index: 25;
+        }
+        #menuPanelShell {
+            position: relative;
         }
         .panel-close {
             position: absolute; top: 10px; right: 10px;
@@ -302,15 +305,113 @@
             color: #6b7280;
         }
 
-        .preview-sand {
-            background: var(--sand); border-radius: 8px; height: 90px;
-            position: relative; margin: 10px 0; overflow: hidden;
-            background-image:
-                linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px);
-            background-size: 20px 20px;
+        .sim-preview {
+            position: relative; margin: 10px 0; border-radius: 10px;
+            height: 148px; overflow: hidden;
+            border: 1px solid #cbd5e1;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.25), 0 4px 14px rgba(15,23,42,0.12);
+            background:
+                linear-gradient(165deg, rgba(15,23,42,0.15), rgba(15,23,42,0.45)),
+                url('assets/maps/map-14.jpg') center / cover no-repeat,
+                linear-gradient(135deg, #4a6741 0%, #6b7c5c 35%, #8a9a7a 60%, #5c6b52 100%);
         }
-        .preview-sand .drone-svg { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); width: 48px; }
+        .sim-preview svg {
+            position: absolute; inset: 0; width: 100%; height: 100%;
+            pointer-events: none;
+        }
+        .sim-preview-caption {
+            position: absolute; left: 8px; bottom: 6px; z-index: 2;
+            font-size: 0.62rem; font-weight: 700; color: #f8fafc;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+            letter-spacing: 0.02em;
+        }
+
+        #featureList.feature-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+            margin: 8px 0 0; padding: 0; list-style: none;
+        }
+        .feature-card {
+            display: flex; gap: 8px; align-items: stretch;
+            padding: 6px; border-radius: 8px;
+            background: #fff; border: 1px solid #e2e8f0;
+            min-height: 58px;
+        }
+        .feature-thumb {
+            width: 52px; min-width: 52px; border-radius: 6px;
+            background-size: cover; background-position: center;
+            border: 1px solid rgba(0,0,0,0.08);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.2);
+        }
+        .feature-body {
+            display: flex; flex-direction: column; justify-content: center;
+            gap: 2px; min-width: 0;
+        }
+        .feature-body strong {
+            font-size: 0.72rem; color: #0f172a; line-height: 1.2;
+        }
+        .feature-body span {
+            font-size: 0.64rem; color: #64748b; line-height: 1.25;
+        }
+        .feature-thumb--vectors {
+            background-image: linear-gradient(135deg, #1e3a5f, #0f172a),
+                linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px);
+            background-size: auto, 8px 8px, 8px 8px;
+            box-shadow: inset 0 -12px 0 #22c55e, inset 12px 0 0 #fb923c, inset -8px 8px 0 #60a5fa;
+        }
+        .feature-thumb--courses {
+            background: linear-gradient(160deg, #d4c4a8, #a89878);
+            background-image:
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 52 48'%3E%3Cpath d='M8 36 Q26 8 44 36' fill='none' stroke='%23b45309' stroke-width='2.5'/%3E%3Cpath d='M10 24 L42 24 L42 40 L10 40Z' fill='none' stroke='%231d4ed8' stroke-width='1.5'/%3E%3C/svg%3E"),
+                linear-gradient(160deg, #d4c4a8, #a89878);
+        }
+        .feature-thumb--vlos {
+            background-image:
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 52 48'%3E%3Ccircle cx='26' cy='22' r='14' fill='none' stroke='%2322c55e' stroke-width='2' stroke-dasharray='4 3'/%3E%3Cpath d='M26 8 L26 2 M26 42 L26 36' stroke='%23fff' stroke-width='1.5'/%3E%3C/svg%3E"),
+                linear-gradient(180deg, #7cb87c, #4a7c4a);
+        }
+        .feature-thumb--wind {
+            background: linear-gradient(120deg, #94a3b8, #64748b);
+            background-image:
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 52 48'%3E%3Cpath d='M6 20h28M6 28h22M6 36h30' stroke='%23e2e8f0' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E"),
+                linear-gradient(120deg, #94a3b8, #64748b);
+        }
+        .feature-thumb--threat {
+            background: linear-gradient(160deg, #78716c, #57534e);
+            background-image:
+                radial-gradient(circle at 50% 45%, rgba(220,38,38,0.55) 0%, rgba(220,38,38,0.2) 45%, transparent 70%),
+                linear-gradient(160deg, #78716c, #44403c);
+        }
+        .feature-thumb--radar {
+            background: linear-gradient(180deg, #1e3a5f, #0f172a);
+            background-image:
+                conic-gradient(from 200deg at 50% 80%, rgba(34,197,94,0.35) 0deg, transparent 55deg),
+                repeating-radial-gradient(circle at 50% 90%, transparent 0 6px, rgba(96,165,250,0.25) 6px 12px),
+                linear-gradient(180deg, #1e3a5f, #0f172a);
+        }
+        .feature-thumb--naval {
+            background: linear-gradient(180deg, #0369a1, #0c4a6e);
+            background-image:
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 52 48'%3E%3Cpath d='M0 32 Q26 20 52 32 L52 48 L0 48Z' fill='%230ea5e9' opacity='0.5'/%3E%3Crect x='20' y='18' width='12' height='14' fill='%23e2e8f0'/%3E%3C/svg%3E"),
+                linear-gradient(180deg, #0369a1, #0c4a6e);
+        }
+        .feature-thumb--gamepad, .feature-thumb--touch {
+            background: linear-gradient(145deg, #334155, #1e293b);
+            background-image:
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 52 48'%3E%3Crect x='8' y='14' width='36' height='22' rx='6' fill='%23475569' stroke='%2394a3b8'/%3E%3Ccircle cx='18' cy='25' r='4' fill='%232563eb'/%3E%3Ccircle cx='34' cy='25' r='4' fill='%232563eb'/%3E%3C/svg%3E"),
+                linear-gradient(145deg, #334155, #1e293b);
+        }
+
+        .menu-start-block {
+            margin: 12px 0 14px;
+            padding: 12px 0 0;
+            border-top: 1px solid #e5e7eb;
+        }
+        .menu-start-block .primary {
+            width: 100%;
+            font-size: 1rem;
+            padding: 12px 16px;
+        }
 
         .levels { display: flex; flex-direction: column; gap: 4px; margin: 8px 0; }
         .levels label {
@@ -380,8 +481,6 @@
             background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;
             padding: 10px 14px; margin: 10px 0; font-size: 0.8rem;
         }
-        .features-box ul { margin: 6px 0 0; padding-left: 18px; color: #475569; }
-        .features-box li { margin: 3px 0; }
         .branch-header { user-select: none; }
 
         /* ── Cần ảo mobile / tablet ── */
@@ -592,6 +691,18 @@
             .panel-scroll h1, .panel h1 { font-size: 1.05rem; }
             .levels label { padding: 8px 10px; }
             .levels label small { font-size: 0.74rem; }
+
+            .panel-close-pin {
+                position: fixed;
+                top: max(10px, env(safe-area-inset-top));
+                right: max(10px, env(safe-area-inset-right));
+                z-index: 55;
+                width: 40px; height: 40px;
+                font-size: 1.35rem;
+                box-shadow: 0 2px 14px rgba(0,0,0,0.28);
+            }
+            #featureList.feature-grid { grid-template-columns: 1fr; }
+            .sim-preview { height: 120px; }
         }
 
         .hidden { display: none !important; }
@@ -798,30 +909,48 @@
             <p>Mô phỏng <strong>VLOS tác chiến</strong>: trinh sát · chống UAV bay thấp · bảo vệ mục tiêu · liên hợp đa phương. Đe dọa <strong>m/ph hướng Đ</strong> · yểm trợ <strong>◆Đồng minh m/ph</strong>.</p>
             <p style="font-size:0.82rem;color:#6b7280">
                 🔴 Vùng đỏ = UAV địch m/ph · 🟢 🇻🇳 = ta ·
-                🔵 MTTQ · ≋ Biển Đông
+                🔵 Khu vực AO (bảo vệ) · ≋ Biển Đông
             </p>
 
             <div class="features-box">
                 <strong>📋 Tính năng mô phỏng</strong>
-                <ul id="featureList"></ul>
+                <div id="featureList" class="feature-grid" role="list"></div>
             </div>
 
-            <div class="preview-sand">
-                <svg class="drone-svg" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <ellipse cx="34" cy="38" rx="22" ry="12" fill="rgba(0,0,0,0.12)"/>
-                    <line x1="32" y1="32" x2="14" y2="14" stroke="#4a4a4a" stroke-width="3" stroke-linecap="round"/>
-                    <line x1="32" y1="32" x2="50" y2="14" stroke="#4a4a4a" stroke-width="3" stroke-linecap="round"/>
-                    <line x1="32" y1="32" x2="14" y2="50" stroke="#4a4a4a" stroke-width="3" stroke-linecap="round"/>
-                    <line x1="32" y1="32" x2="50" y2="50" stroke="#4a4a4a" stroke-width="3" stroke-linecap="round"/>
-                    <circle cx="14" cy="14" r="4" fill="#2d2d2d" stroke="#666"/>
-                    <circle cx="50" cy="14" r="4" fill="#2d2d2d" stroke="#666"/>
-                    <circle cx="14" cy="50" r="4" fill="#2d2d2d" stroke="#666"/>
-                    <circle cx="50" cy="50" r="4" fill="#2d2d2d" stroke="#666"/>
-                    <rect x="26" y="28" width="12" height="8" rx="2" fill="#6b7280"/>
-                    <circle cx="38" cy="32" r="2" fill="#ef4444"/>
-                    <line x1="32" y1="29" x2="32" y2="35" stroke="#dc2626" stroke-width="1.2"/>
-                    <line x1="29" y1="32" x2="35" y2="32" stroke="#dc2626" stroke-width="1.2"/>
+            <div class="sim-preview" aria-hidden="true">
+                <svg viewBox="0 0 400 148" preserveAspectRatio="xMidYMid slice">
+                    <defs>
+                        <pattern id="tacGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+                            <path d="M20 0H0V20" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="0.6"/>
+                        </pattern>
+                        <radialGradient id="threatGlow" cx="50%" cy="50%" r="50%">
+                            <stop offset="0%" stop-color="rgba(220,38,38,0.5)"/>
+                            <stop offset="100%" stop-color="rgba(220,38,38,0)"/>
+                        </radialGradient>
+                    </defs>
+                    <rect width="400" height="148" fill="url(#tacGrid)" opacity="0.9"/>
+                    <ellipse cx="200" cy="78" rx="52" ry="38" fill="rgba(37,99,235,0.22)" stroke="#3b82f6" stroke-width="2" stroke-dasharray="6 4"/>
+                    <text x="200" y="80" text-anchor="middle" fill="#dbeafe" font-size="11" font-weight="700">Khu BV</text>
+                    <circle cx="88" cy="42" r="28" fill="url(#threatGlow)"/>
+                    <circle cx="88" cy="42" r="22" fill="none" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="4 3"/>
+                    <circle cx="310" cy="108" r="24" fill="url(#threatGlow)"/>
+                    <path d="M200 95 L200 118" stroke="#fff" stroke-width="2"/>
+                    <path d="M200 95 L188 108 L200 102 L212 108 Z" fill="#f97316" stroke="#fff" stroke-width="1"/>
+                    <circle cx="200" cy="95" r="6" fill="#374151" stroke="#fff"/>
+                    <line x1="200" y1="95" x2="178" y2="78" stroke="#6b7280" stroke-width="2"/>
+                    <line x1="200" y1="95" x2="222" y2="78" stroke="#6b7280" stroke-width="2"/>
+                    <line x1="200" y1="95" x2="178" y2="112" stroke="#6b7280" stroke-width="2"/>
+                    <line x1="200" y1="95" x2="222" y2="112" stroke="#6b7280" stroke-width="2"/>
+                    <path d="M48 118 L92 98 L140 122 L200 108 L260 125 L320 100 L360 118" fill="none" stroke="rgba(255,255,255,0.35)" stroke-width="1.2"/>
+                    <text x="88" y="46" text-anchor="middle" fill="#fecaca" font-size="9" font-weight="700">!</text>
+                    <text x="48" y="18" fill="#86efac" font-size="8" font-weight="600">VLOS · vector</text>
                 </svg>
+                <span class="sim-preview-caption">Ảnh nền sân tập · vùng AO · UAV m/ph</span>
+            </div>
+
+            <div class="menu-start-block">
+                <button type="button" class="secondary hidden" id="btnMenuResume">← Tiếp tục bay</button>
+                <button type="button" class="primary" id="btnStart">▶ Bắt đầu bay</button>
             </div>
 
             <h2>Chọn kịch bản</h2>
@@ -833,9 +962,6 @@
                 <button type="button" data-skill="trung-cap">Trung cấp</button>
                 <button type="button" data-skill="nang-cao">Nâng cao</button>
             </div>
-
-            <button type="button" class="secondary hidden" id="btnMenuResume">← Tiếp tục bay</button>
-            <button type="button" class="primary" id="btnStart">▶ Bắt đầu bay</button>
             <p class="company-menu" id="companyMenu">Công Ty TNHH Công Nghệ Đông A</p>
             </div>
         </div>
@@ -881,6 +1007,6 @@
         </div>
     </div>
 </div>
-<script type="module" src="./game.js?v=20260601h"></script>
+<script type="module" src="./game.js?v=20260601i"></script>
 </body>
 </html>

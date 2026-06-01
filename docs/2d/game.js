@@ -680,7 +680,7 @@ function drawProtectZone() {
     ctx.font = `bold ${12 * scale}px Segoe UI, sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(pz.label ?? 'MTTQ', sx, sy);
+    ctx.fillText(pz.label ?? 'Khu BV', sx, sy);
     ctx.restore();
 }
 
@@ -917,14 +917,34 @@ function buildFeatureList() {
     const el = document.getElementById('featureList');
     if (!el) return;
     el.innerHTML = FEATURES.map(f =>
-        `<li><strong>${f.name}</strong> — ${f.desc}</li>`
+        `<article class="feature-card">
+            <div class="feature-thumb feature-thumb--${f.id}" aria-hidden="true"></div>
+            <div class="feature-body">
+                <strong>${f.name}</strong>
+                <span>${f.desc}</span>
+            </div>
+        </article>`
     ).join('');
 }
 
+function startSelectedLevel() {
+    levelIdx = parseInt(document.querySelector('input[name="level"]:checked')?.value ?? '0', 10);
+    showMenu(false);
+}
+
 function updateMenuResumeUi() {
-    const show = menuCanResume;
-    document.getElementById('btnMenuClose')?.classList.toggle('hidden', !show);
-    document.getElementById('btnMenuResume')?.classList.toggle('hidden', !show);
+    const showResume = menuCanResume;
+    const mobile = isMobileLayout();
+    const btnClose = document.getElementById('btnMenuClose');
+    btnClose?.classList.toggle('hidden', !showResume && !mobile);
+    btnClose?.setAttribute('title', showResume ? 'Tiếp tục bay' : 'Bắt đầu bay');
+    btnClose?.setAttribute('aria-label', showResume ? 'Tiếp tục bay' : 'Bắt đầu bay');
+    document.getElementById('btnMenuResume')?.classList.toggle('hidden', !showResume);
+}
+
+function onMenuCloseClick() {
+    if (menuCanResume) resumeFromMenu();
+    else if (isMobileLayout()) startSelectedLevel();
 }
 
 function showMenu(show, opts = {}) {
@@ -978,13 +998,10 @@ document.getElementById('skillList').addEventListener('click', (e) => {
     document.querySelectorAll('#skillList button').forEach(b => b.classList.toggle('active', b === btn));
 });
 
-document.getElementById('btnStart').addEventListener('click', () => {
-    levelIdx = parseInt(document.querySelector('input[name="level"]:checked')?.value ?? '0', 10);
-    showMenu(false);
-});
+document.getElementById('btnStart').addEventListener('click', () => startSelectedLevel());
 
 document.getElementById('btnMenu').addEventListener('click', () => pauseToMenu());
-document.getElementById('btnMenuClose')?.addEventListener('click', () => resumeFromMenu());
+document.getElementById('btnMenuClose')?.addEventListener('click', () => onMenuCloseClick());
 document.getElementById('btnMenuResume')?.addEventListener('click', () => resumeFromMenu());
 document.getElementById('btnPower').addEventListener('click', () => exitToMainMenu());
 document.getElementById('objExit')?.addEventListener('click', () => exitToMainMenu());
@@ -1094,6 +1111,7 @@ setWindVolume(0.7);
 if (isMobileLayout()) guidePanelOpen = false;
 buildLevelList();
 buildFeatureList();
+updateMenuResumeUi();
 initTouchControls();
 applyGuidePanelUi();
 document.getElementById('companyFooter').textContent = COMPANY.name;
