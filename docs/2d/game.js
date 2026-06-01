@@ -980,9 +980,11 @@ function onMenuCloseClick() {
 }
 
 function showMenu(show, opts = {}) {
+    const wikiFab = document.getElementById('wikiFab');
     if (show) {
         document.getElementById('menuOverlay').classList.remove('hidden');
         document.getElementById('gameUi').classList.add('hidden');
+        wikiFab?.classList.add('hidden');
         setTouchControlsVisible(false);
         running = false;
         stopDroneAudio();
@@ -992,6 +994,7 @@ function showMenu(show, opts = {}) {
 
     document.getElementById('menuOverlay').classList.add('hidden');
     document.getElementById('gameUi').classList.remove('hidden');
+    wikiFab?.classList.toggle('hidden', !isMobileLayout());
     setTouchControlsVisible(true);
     running = true;
     if (soundEnabled) resumeAudio();
@@ -1047,6 +1050,7 @@ document.getElementById('btnHelpClose').addEventListener('click', () => toggleHe
 document.getElementById('btnHelpX')?.addEventListener('click', () => toggleHelp());
 document.getElementById('btnWiki')?.addEventListener('click', () => toggleWiki(true));
 document.getElementById('btnMenuWiki')?.addEventListener('click', () => toggleWiki(true));
+document.getElementById('wikiFab')?.addEventListener('click', () => toggleWiki(true));
 document.getElementById('btnWikiX')?.addEventListener('click', () => toggleWiki(false));
 
 document.getElementById('btnWind').addEventListener('click', () => {
