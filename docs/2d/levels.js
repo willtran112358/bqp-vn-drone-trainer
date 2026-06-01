@@ -548,7 +548,7 @@ export const LEVELS = [
 
     },
 
-    // Ẩn — liên hợp nước ngoài (giữ trong data, không hiện menu)
+    // Ẩn — liên hợp đồng minh (giữ trong data, không hiện menu)
 
     {
 
@@ -558,7 +558,7 @@ export const LEVELS = [
 
         hidden: true,
 
-        name: 'LH · ◆US ◆RU yểm trợ m/ph',
+        name: 'LH · ◆Đồng minh yểm trợ m/ph',
 
         desc: 'Ẩn',
 
