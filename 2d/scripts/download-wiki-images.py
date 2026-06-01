@@ -78,7 +78,7 @@ def main():
             if download(info["source"], dest):
                 meta[aid] = {
                     "file": f"assets/wiki/{aid}.jpg",
-                    "credit": f"Wikipedia — {info['title']}",
+                    "credit": info["title"],
                     "alt": info["description"] or info["title"],
                 }
                 print(f"OK ({dest.stat().st_size // 1024} KB)")

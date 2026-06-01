@@ -29,7 +29,7 @@ for aid, title in TITLES.items():
     if p.exists() and p.stat().st_size > 400:
         meta[aid] = {
             "file": f"assets/wiki/{aid}.jpg",
-            "credit": f"Wikipedia — {title}",
+            "credit": title,
             "alt": title,
         }
 (OUT / "manifest.json").write_text(json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")
