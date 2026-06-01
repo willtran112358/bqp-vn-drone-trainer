@@ -118,14 +118,14 @@ quadrantChart
     title Cấp độ huấn luyện vs độ khó điều khiển
     x-axis Dễ điều khiển --> Khó điều khiển
     y-axis Phản ứng chậm --> Phản ứng nhanh
-    quadrant-1 Pro / Nâng cao
+    quadrant-1 Pro Nâng cao
     quadrant-2 Trung cấp
     quadrant-3 Cơ bản
-    quadrant-4 Tự do (Freestyle)
-    "Cơ bản (co-ban)": [0.2, 0.25]
-    "Trung cấp (trung-cap)": [0.5, 0.55]
-    "Nâng cao (nang-cao)": [0.85, 0.9]
-    "Sân tập tự do": [0.4, 0.7]
+    quadrant-4 Tự do Freestyle
+    Cơ bản: [0.2, 0.25]
+    Trung cấp: [0.5, 0.55]
+    Nâng cao: [0.85, 0.9]
+    Sân tập tự do: [0.4, 0.7]
 ```
 
 ---
