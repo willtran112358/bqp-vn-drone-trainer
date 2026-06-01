@@ -4,3 +4,5 @@ Thumbs.db
 2d/config.local.js
 docs/2d/config.local.js
 2d/_video_frames/
+2d/node_modules/
+node_modules/
