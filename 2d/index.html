@@ -564,6 +564,23 @@
                 transform: translateX(calc(-50% - var(--sidebar-w) / 2)) translateY(0);
             }
 
+            #groundNotice {
+                bottom: calc(var(--hud-bottom) + 52px);
+                left: calc(var(--sidebar-w) + 50%);
+                transform: translateX(calc(-50% - var(--sidebar-w) / 2)) translateY(14px);
+                padding: 8px 12px; gap: 8px;
+                max-width: calc(100vw - var(--sidebar-w) - var(--alt-w) - 16px);
+            }
+            #groundNotice.show,
+            #groundNotice.just-landed {
+                transform: translateX(calc(-50% - var(--sidebar-w) / 2)) translateY(0);
+            }
+            @keyframes groundPulse {
+                0% { transform: translateX(calc(-50% - var(--sidebar-w) / 2)) scale(0.96); }
+                40% { transform: translateX(calc(-50% - var(--sidebar-w) / 2)) scale(1.03); }
+                100% { transform: translateX(calc(-50% - var(--sidebar-w) / 2)) translateY(0) scale(1); }
+            }
+
             /* Menu overlay */
             .overlay { padding: 10px; align-items: flex-start; padding-top: max(10px, env(safe-area-inset-top)); }
             .panel-shell { max-height: calc(100dvh - 20px); border-radius: 10px; }
@@ -595,6 +612,44 @@
         #actionToast.show {
             opacity: 1;
             transform: translateX(-50%) translateY(0);
+        }
+
+        #groundNotice {
+            position: absolute; left: 50%; bottom: 168px; z-index: 19;
+            transform: translateX(-50%) translateY(14px);
+            display: flex; align-items: center; gap: 10px;
+            max-width: min(360px, 90vw);
+            padding: 10px 14px; border-radius: 10px;
+            background: rgba(146, 64, 14, 0.94);
+            color: #fffbeb; font-size: 0.8rem; line-height: 1.35;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255, 237, 213, 0.45);
+            pointer-events: none; opacity: 0;
+            transition: opacity 0.28s ease, transform 0.28s ease;
+        }
+        #groundNotice.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        #groundNotice.just-landed {
+            animation: groundPulse 0.65s ease-out 1;
+        }
+        @keyframes groundPulse {
+            0% { transform: translateX(-50%) scale(0.96); }
+            40% { transform: translateX(-50%) scale(1.03); }
+            100% { transform: translateX(-50%) translateY(0) scale(1); }
+        }
+        #groundNotice .ground-notice-icon {
+            font-size: 1.35rem; line-height: 1; flex-shrink: 0;
+        }
+        #groundNotice .ground-notice-text {
+            display: flex; flex-direction: column; gap: 2px; text-align: left;
+        }
+        #groundNotice .ground-notice-text strong {
+            font-size: 0.86rem; font-weight: 700; color: #fff;
+        }
+        #groundNotice .ground-notice-text span {
+            font-size: 0.76rem; opacity: 0.95;
         }
     </style>
 </head>
@@ -700,6 +755,13 @@
         <div id="companyHud">Đông A Tech</div>
         <div id="companyFooter">Công Ty TNHH Công Nghệ Đông A</div>
         <div id="actionToast" class="hidden" aria-live="polite"></div>
+        <div id="groundNotice" class="hidden" role="status" aria-live="polite">
+            <span class="ground-notice-icon" aria-hidden="true">⬇</span>
+            <div class="ground-notice-text">
+                <strong>Drone đã chạm đất</strong>
+                <span>Nhấn ga (W / cần trái lên) để cất cánh — chưa bay ngang được</span>
+            </div>
+        </div>
 
         <div id="finishOverlay" class="hidden">
             <div class="finish-box">
@@ -819,6 +881,6 @@
         </div>
     </div>
 </div>
-<script type="module" src="./game.js?v=20260601g"></script>
+<script type="module" src="./game.js?v=20260601h"></script>
 </body>
 </html>

@@ -134,7 +134,9 @@ function resetDrone() {
     prevVx = prevVy = 0;
     prevAlt = drone.alt;
     ghostTrail.length = 0;
+    prevGrounded = false;
     hideActionToast();
+    hideGroundNotice();
     if (lv.defaultWind) {
         windStrength = lv.defaultWind.strength;
         windAngle = lv.defaultWind.angle;
@@ -228,6 +230,7 @@ function updateHud() {
     }
     updateObjective();
     updateStickHud();
+    updateGroundNotice();
     updateFinishOverlay();
 }
 
@@ -471,6 +474,54 @@ function formatTime(t) {
 }
 
 let toastTimer = null;
+let prevGrounded = false;
+let groundNoticeHideTimer = null;
+
+function hideGroundNotice() {
+    const el = document.getElementById('groundNotice');
+    if (!el) return;
+    el.classList.remove('show', 'just-landed');
+    if (groundNoticeHideTimer) {
+        clearTimeout(groundNoticeHideTimer);
+        groundNoticeHideTimer = null;
+    }
+    groundNoticeHideTimer = setTimeout(() => {
+        if (!el.classList.contains('show')) el.classList.add('hidden');
+        groundNoticeHideTimer = null;
+    }, 280);
+}
+
+/** Banner cảnh báo khi drone chạm đất — nhắc tăng ga để cất cánh */
+function updateGroundNotice() {
+    const el = document.getElementById('groundNotice');
+    if (!el) return;
+    if (!running || finished) {
+        prevGrounded = false;
+        hideGroundNotice();
+        return;
+    }
+    const grounded = drone.alt <= GROUND_EPS;
+    if (grounded && !prevGrounded) {
+        el.classList.remove('hidden');
+        el.classList.add('just-landed');
+        requestAnimationFrame(() => el.classList.add('show'));
+        setTimeout(() => el.classList.remove('just-landed'), 700);
+        if (groundNoticeHideTimer) {
+            clearTimeout(groundNoticeHideTimer);
+            groundNoticeHideTimer = null;
+        }
+    } else if (grounded) {
+        el.classList.remove('hidden');
+        if (!el.classList.contains('show')) requestAnimationFrame(() => el.classList.add('show'));
+        if (groundNoticeHideTimer) {
+            clearTimeout(groundNoticeHideTimer);
+            groundNoticeHideTimer = null;
+        }
+    } else if (prevGrounded) {
+        hideGroundNotice();
+    }
+    prevGrounded = grounded;
+}
 
 function hideActionToast() {
     const el = document.getElementById('actionToast');
