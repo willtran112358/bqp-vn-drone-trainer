@@ -158,20 +158,45 @@
             position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
             background: rgba(0,0,0,0.55); z-index: 50; padding: 16px;
         }
+        .panel-shell {
+            position: relative;
+            max-width: min(96vw, 620px);
+            max-height: 90vh;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
         .panel {
             background: #fff; border-radius: 12px; padding: 24px 28px;
             max-width: min(96vw, 620px); max-height: 90vh; overflow-y: auto;
             box-shadow: 0 8px 32px rgba(0,0,0,0.25);
             position: relative;
         }
-        .panel-close {
-            position: absolute; top: 10px; right: 10px;
+        .panel-scroll {
+            overflow-y: auto;
+            padding: 20px 24px 22px;
+            padding-top: 38px;
+            max-height: 90vh;
+        }
+        .panel-close, .panel-close-pin {
             width: 32px; height: 32px; border: none; border-radius: 50%;
             background: #fef2f2; color: #dc2626; font-size: 1.15rem; font-weight: 700;
             cursor: pointer; line-height: 1; display: flex; align-items: center; justify-content: center;
             box-shadow: 0 1px 4px rgba(0,0,0,0.12);
         }
-        .panel-close:hover { background: #fee2e2; }
+        .panel-close-pin {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 5;
+        }
+        .panel-close {
+            position: absolute; top: 10px; right: 10px;
+        }
+        .panel-close:hover, .panel-close-pin:hover { background: #fee2e2; }
         #objExit {
             position: absolute; top: 6px; right: 6px;
             width: 24px; height: 24px; border: none; border-radius: 6px;
@@ -201,9 +226,9 @@
         #finishOverlay .btn-retry { background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; }
         #finishOverlay .btn-retry:hover { background: #e5e7eb; }
         #finishOverlay .panel-close { top: 8px; right: 8px; }
-        .panel h1 { margin: 0 0 8px; font-size: 1.25rem; }
-        .panel h2 { margin: 14px 0 6px; font-size: 0.9rem; color: var(--muted); }
-        .panel p, .panel li { font-size: 0.86rem; line-height: 1.55; color: #374151; }
+        .panel-scroll h1, .panel h1 { margin: 0 0 8px; font-size: 1.25rem; }
+        .panel-scroll h2, .panel h2 { margin: 12px 0 4px; font-size: 0.88rem; color: var(--muted); }
+        .panel-scroll p, .panel-scroll li, .panel p, .panel li { font-size: 0.86rem; line-height: 1.5; color: #374151; }
         .badge {
             display: inline-block; background: #dbeafe; color: #1d4ed8;
             font-size: 0.72rem; padding: 3px 8px; border-radius: 6px; margin-bottom: 8px;
@@ -230,9 +255,9 @@
         }
         .preview-sand .drone-svg { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); width: 48px; }
 
-        .levels { display: flex; flex-direction: column; gap: 6px; margin: 10px 0; }
+        .levels { display: flex; flex-direction: column; gap: 4px; margin: 8px 0; }
         .levels label {
-            display: flex; gap: 10px; padding: 10px 14px;
+            display: flex; gap: 8px; padding: 7px 10px;
             border: 1px solid #e5e7eb; border-radius: 8px; cursor: pointer;
             align-items: flex-start; overflow: visible;
         }
@@ -244,14 +269,15 @@
             line-height: 1.5; overflow: visible;
         }
         .levels label strong {
-            display: block; margin-bottom: 3px;
-            line-height: 1.35;
+            display: block; margin-bottom: 1px;
+            line-height: 1.3; font-size: 0.88rem;
         }
         .levels label small {
-            display: block; font-size: 0.8rem; color: #6b7280;
-            line-height: 1.45; overflow-wrap: break-word;
+            display: block; font-size: 0.72rem; color: #6b7280;
+            line-height: 1.35; overflow-wrap: break-word;
             word-break: normal; padding-right: 2px;
         }
+        .branch-header { font-size: 0.74rem !important; margin: 8px 0 2px !important; }
         .levels label:hover, .levels label:has(input:checked) {
             border-color: var(--accent); background: #eff6ff;
         }
@@ -469,12 +495,13 @@
 
             /* Menu overlay */
             .overlay { padding: 10px; align-items: flex-start; padding-top: max(10px, env(safe-area-inset-top)); }
-            .panel {
-                padding: 16px 18px;
+            .panel-shell { max-height: calc(100dvh - 20px); border-radius: 10px; }
+            .panel-scroll {
+                padding: 14px 16px 16px;
+                padding-top: 36px;
                 max-height: calc(100dvh - 20px);
-                border-radius: 10px;
             }
-            .panel h1 { font-size: 1.05rem; }
+            .panel-scroll h1, .panel h1 { font-size: 1.05rem; }
             .levels label { padding: 8px 10px; }
             .levels label small { font-size: 0.74rem; }
         }
@@ -614,8 +641,9 @@
 
     <!-- Menu chính -->
     <div id="menuOverlay" class="overlay">
-        <div class="panel">
-            <button type="button" class="panel-close hidden" id="btnMenuClose" title="Tiếp tục bay" aria-label="Tiếp tục bay">×</button>
+        <div class="panel-shell" id="menuPanelShell">
+            <button type="button" class="panel-close-pin hidden" id="btnMenuClose" title="Tiếp tục bay" aria-label="Tiếp tục bay">×</button>
+            <div class="panel-scroll">
             <span class="badge">BQP VN · Huấn luyện UAV tác chiến</span>
             <div class="company-line">Công Ty TNHH Công Nghệ Đông A <small>— phát triển</small></div>
             <h1>HL UAV tác chiến — Kịch bản theo đơn vị</h1>
@@ -661,6 +689,7 @@
             <button type="button" class="secondary hidden" id="btnMenuResume">← Tiếp tục bay</button>
             <button type="button" class="primary" id="btnStart">▶ Bắt đầu bay</button>
             <p class="company-menu" id="companyMenu">Công Ty TNHH Công Nghệ Đông A</p>
+            </div>
         </div>
     </div>
 
@@ -686,9 +715,9 @@
                 <li><span style="color:#f87171">■ Tổng hợp</span> — vận tốc thực tế</li>
             </ul>
             <p>Bay qua <strong>điểm QS</strong> (vòng trắng). Tránh <strong>vùng đỏ</strong> (UAV m/ph). Hạ cánh tại <strong>H</strong>.</p>
-            <h2>Khóa tuyến bay</h2>
+            <h2>Khóa tuyến</h2>
             <ul>
-                <li><strong>📐 Khóa tuyến:</strong> S ngang/dọc · tam giác · vuông · số 8 · khẩn cấp · xoay chỗ</li>
+                <li><strong>📐 Khóa tuyến:</strong> S ngang/dọc · tam giác · vuông · số 8 · khẩn cấp · xoay · sân tự do</li>
             </ul>
             <h2>Nhóm kịch bản (BQP)</h2>
             <ul>
@@ -703,6 +732,6 @@
         </div>
     </div>
 </div>
-<script type="module" src="./game.js?v=20260601a"></script>
+<script type="module" src="./game.js?v=20260601b"></script>
 </body>
 </html>

@@ -23,7 +23,7 @@ export const THREAT_BEARING = 'Đ';
 
 
 export const BRANCHES = {
-    'khoa-tuyen': { name: 'Khóa tuyến bay', icon: '📐', color: '#0d9488', hint: 'S · hình học · số 8 — tham khảo khóa VLOS' },
+    'khoa-tuyen': { name: 'Khóa tuyến', icon: '📐', color: '#0d9488', hint: 'S · hình học · số 8' },
     'co-so': { name: 'Cơ sở HL', icon: '🎓', color: '#6b7280', hint: 'Làm quen VLOS trước tác chiến' },
 
     'bien-phong': { name: 'Biên phòng QB', icon: '🛡️', color: '#15803d', hint: 'Tuần biên · UAV xâm nhập' },
@@ -48,7 +48,7 @@ export const BRANCH_ORDER = ['khoa-tuyen', 'co-so', 'bien-phong', 'pk-kq', 'hai-
 
 export const FEATURES = [
     { id: 'vectors', name: 'Vector hướng dẫn', desc: 'Lệnh · hướng · gia tốc · gió · tổng hợp' },
-    { id: 'courses', name: 'Khóa tuyến bay', desc: 'S-curve · tam giác · số 8 · xoay chỗ' },
+    { id: 'courses', name: 'Khóa tuyến', desc: 'S · tam giác · vuông · số 8 · khẩn cấp' },
     { id: 'motor-se', name: 'Âm thanh motor', desc: 'Tiếng cánh quạt theo ga (Web Audio)' },
     { id: 'vlos', name: 'Bay VLOS tác chiến', desc: 'Huấn luyện tầm nhìn trực tiếp — không FPV' },
 
