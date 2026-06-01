@@ -41,6 +41,11 @@ let showInputHints = true;
 let soundEnabled = true;
 let pirouetteYawAccum = 0;
 
+/** Độ cao chuẩn hóa 0..1 — 0 = chạm đất */
+const GROUND_ALT = 0;
+/** alt chuẩn hóa ≤ ngưỡng này = chạm đất, không bay ngang */
+const GROUND_EPS = 0.08;
+
 const drone = { x: 400, y: 300, angle: 0, vx: 0, vy: 0, alt: 0.5 };
 let prevVx = 0;
 let prevVy = 0;
@@ -95,7 +100,7 @@ function resetDrone() {
     drone.y = lv.spawn.y;
     drone.angle = lv.spawn.angle;
     drone.vx = drone.vy = 0;
-    drone.alt = 0.5;
+    drone.alt = 0.35;
     cpIndex = 0;
     elapsed = 0;
     finished = false;
@@ -152,7 +157,11 @@ function getObjectiveText() {
 function updateObjective() {
     const { main, sub } = getObjectiveText();
     document.getElementById('objText').textContent = main;
-    document.getElementById('objSub').textContent = sub;
+    let subText = sub;
+    if (running && !finished && drone.alt <= GROUND_EPS) {
+        subText = `⬇ Chạm đất · W/S ga để cất cánh · chưa bay ngang`;
+    }
+    document.getElementById('objSub').textContent = subText;
 }
 
 function updateWindDial() {
@@ -225,23 +234,35 @@ function update(dt) {
 
     const thrust = (inp.throttle * 0.5 + 0.5) * s.thrustPower;
     drone.alt += (thrust - 0.35) * s.altDecay * dt;
-    drone.alt = Math.max(0.05, Math.min(1, drone.alt));
+    if (drone.alt <= GROUND_EPS) drone.alt = GROUND_ALT;
+    drone.alt = Math.min(1, drone.alt);
 
-    let p = inp.pitch, r = inp.roll;
-    if (s.stabilization > 0) { p *= (1 - s.stabilization); r *= (1 - s.stabilization); }
-    const mag = Math.hypot(p, r);
-    if (mag > s.angleLimit) { const f = s.angleLimit / mag; p *= f; r *= f; }
+    const airborne = drone.alt > GROUND_EPS;
 
-    const speedMul = 0.3 + drone.alt * 0.55;
-    const localFx = -p * s.maxSpeed * speedMul;
-    const localRy = r * s.maxSpeed * speedMul;
-    const cos = Math.cos(drone.angle), sin = Math.sin(drone.angle);
-    drone.vx += (cos * localFx - sin * localRy) * s.accel * dt;
-    drone.vy += (sin * localFx + cos * localRy) * s.accel * dt;
+    let p = inp.pitch;
+    let r = inp.roll;
+    if (!airborne) {
+        p = 0;
+        r = 0;
+        drone.vx = 0;
+        drone.vy = 0;
+    } else {
+        if (s.stabilization > 0) { p *= (1 - s.stabilization); r *= (1 - s.stabilization); }
+        const mag = Math.hypot(p, r);
+        if (mag > s.angleLimit) { const f = s.angleLimit / mag; p *= f; r *= f; }
 
-    if (windStrength > 0) {
-        drone.vx += Math.cos(windAngle) * windStrength * 18 * dt;
-        drone.vy += Math.sin(windAngle) * windStrength * 18 * dt;
+        const speedMul = 0.3 + drone.alt * 0.55;
+        const localFx = -p * s.maxSpeed * speedMul;
+        const localRy = r * s.maxSpeed * speedMul;
+        const cos = Math.cos(drone.angle);
+        const sin = Math.sin(drone.angle);
+        drone.vx += (cos * localFx - sin * localRy) * s.accel * dt;
+        drone.vy += (sin * localFx + cos * localRy) * s.accel * dt;
+
+        if (windStrength > 0) {
+            drone.vx += Math.cos(windAngle) * windStrength * 18 * dt;
+            drone.vy += Math.sin(windAngle) * windStrength * 18 * dt;
+        }
     }
 
     const ax = (drone.vx - prevVx) / Math.max(dt, 0.001);

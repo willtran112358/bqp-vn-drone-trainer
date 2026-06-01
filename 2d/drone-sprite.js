@@ -44,21 +44,27 @@ export function drawDroneTopDown(ctx, x, y, angle, scale, alt, throttle, highCon
 
 
 
-    // bóng đổ — offset theo độ cao (cao hơn = bóng xa & mờ hơn)
-    const altFactor = Math.max(0.05, Math.min(1, alt));
-    const shX = (5 + altFactor * 14) * s;
-    const shY = (7 + altFactor * 18) * s;
-    const shAlpha = 0.14 + (1 - altFactor) * 0.2;
-    const shScale = 0.75 + (1 - altFactor) * 0.28;
+    // Bóng đổ — chạm đất: sát drone, đậm; bay cao: xa & mờ hơn
+    const onGround = alt <= 0.08;
+    const altFactor = Math.max(0, Math.min(1, alt));
+    const shX = (onGround ? 2 : 5 + altFactor * 14) * s;
+    const shY = (onGround ? 3 : 7 + altFactor * 18) * s;
+    const shAlpha = onGround ? 0.42 : 0.14 + (1 - altFactor) * 0.22;
+    const shScale = onGround ? 1.05 : 0.75 + (1 - altFactor) * 0.28;
 
-    // Bóng mềm không dùng ctx.filter (tránh lỗi canvas tainted sau ảnh vệ tinh)
     ctx.save();
     ctx.translate(shX, shY);
-    for (let i = 3; i >= 1; i--) {
-        const t = i / 3;
-        ctx.fillStyle = `rgba(0,0,0,${shAlpha * t * 0.45})`;
+    const layers = onGround ? 4 : 3;
+    for (let i = layers; i >= 1; i--) {
+        const t = i / layers;
+        ctx.fillStyle = `rgba(0,0,0,${shAlpha * t * (onGround ? 0.55 : 0.45)})`;
         ctx.beginPath();
-        ctx.ellipse(0, 0, armLen * 1.15 * shScale * (0.85 + t * 0.2), armLen * 0.7 * shScale * (0.85 + t * 0.2), 0, 0, Math.PI * 2);
+        ctx.ellipse(
+            0, 0,
+            armLen * 1.15 * shScale * (0.85 + t * 0.2),
+            armLen * 0.7 * shScale * (0.85 + t * 0.2),
+            0, 0, Math.PI * 2,
+        );
         ctx.fill();
     }
     ctx.restore();
