@@ -352,6 +352,8 @@
         .feature-body span {
             font-size: 0.64rem; color: #64748b; line-height: 1.25;
         }
+        .feature-card--wiki { cursor: pointer; border-color: #93c5fd; }
+        .feature-card--wiki:hover { background: #eff6ff; }
         .feature-thumb--vectors {
             background-image: linear-gradient(135deg, #1e3a5f, #0f172a),
                 linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px),
@@ -395,6 +397,12 @@
                 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 52 48'%3E%3Cpath d='M0 32 Q26 20 52 32 L52 48 L0 48Z' fill='%230ea5e9' opacity='0.5'/%3E%3Crect x='20' y='18' width='12' height='14' fill='%23e2e8f0'/%3E%3C/svg%3E"),
                 linear-gradient(180deg, #0369a1, #0c4a6e);
         }
+        .feature-thumb--wiki {
+            background: linear-gradient(145deg, #1e3a5f, #0f172a);
+            background-image:
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 52 48'%3E%3Crect x='10' y='8' width='32' height='32' rx='3' fill='%23fff' opacity='0.9'/%3E%3Cpath d='M16 16h20M16 24h14M16 32h18' stroke='%231d4ed8' stroke-width='1.5'/%3E%3C/svg%3E"),
+                linear-gradient(145deg, #1e3a5f, #0f172a);
+        }
         .feature-thumb--gamepad, .feature-thumb--touch {
             background: linear-gradient(145deg, #334155, #1e293b);
             background-image:
@@ -412,6 +420,54 @@
             font-size: 1rem;
             padding: 12px 16px;
         }
+        .menu-wiki-row { margin: 0 0 10px; }
+        .menu-wiki-row .btn-wiki {
+            width: 100%; padding: 10px 14px; border-radius: 8px;
+            border: 1px solid #93c5fd; background: #eff6ff; color: #1d4ed8;
+            font-size: 0.88rem; font-weight: 700; cursor: pointer;
+        }
+        .menu-wiki-row .btn-wiki:hover { background: #dbeafe; }
+
+        .wiki-panel-shell { max-width: min(96vw, 720px); }
+        .wiki-scroll { max-height: min(88vh, 720px); }
+        .wiki-lead { font-size: 0.84rem; color: #475569; margin: 0 0 10px; line-height: 1.45; }
+        .wiki-arch-box {
+            background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 8px;
+            padding: 10px 12px; margin-bottom: 12px; font-size: 0.78rem; color: #334155;
+        }
+        .wiki-arch-box ul { margin: 6px 0 0; padding-left: 18px; }
+        .wiki-arch-box li { margin: 3px 0; }
+        .wiki-tabs {
+            display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px;
+        }
+        .wiki-tab {
+            padding: 5px 10px; border-radius: 999px; border: 1px solid #e2e8f0;
+            background: #fff; color: #475569; font-size: 0.72rem; font-weight: 600;
+            cursor: pointer;
+        }
+        .wiki-tab.active { background: #1d4ed8; color: #fff; border-color: #1d4ed8; }
+        .wiki-articles { display: flex; flex-direction: column; gap: 10px; }
+        .wiki-article {
+            border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px;
+            background: #fafafa;
+        }
+        .wiki-article h3 { margin: 0; font-size: 0.92rem; color: #0f172a; }
+        .wiki-sub { margin: 2px 0 0; font-size: 0.76rem; color: #64748b; }
+        .wiki-specs {
+            margin: 6px 0 0; font-size: 0.72rem; color: #0369a1;
+            font-family: ui-monospace, monospace;
+        }
+        .wiki-body { margin-top: 8px; font-size: 0.8rem; line-height: 1.5; color: #374151; }
+        .wiki-tags { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 4px; }
+        .wiki-tags span {
+            font-size: 0.65rem; padding: 2px 7px; border-radius: 4px;
+            background: #e0e7ff; color: #3730a3;
+        }
+        .wiki-foot {
+            margin-top: 14px; font-size: 0.68rem; color: #94a3b8;
+            border-top: 1px solid #e2e8f0; padding-top: 10px;
+        }
+        .wiki-empty { font-size: 0.82rem; color: #64748b; }
 
         .levels { display: flex; flex-direction: column; gap: 4px; margin: 8px 0; }
         .levels label {
@@ -777,6 +833,7 @@
         <button type="button" id="btnWind" title="Gió">💨</button>
         <button type="button" id="btnGuide" title="Hướng dẫn bay / tùy chọn">📋</button>
         <button type="button" id="btnHelp" title="Trợ giúp">🎮</button>
+        <button type="button" id="btnWiki" title="Thư viện UAV Biển Đông">📚</button>
         <button type="button" id="btnReset" title="Reset (R)">↺</button>
         <div class="spacer"></div>
         <button type="button" id="btnPower" title="Thoát về menu">⏻</button>
@@ -948,6 +1005,10 @@
                 <span class="sim-preview-caption">Ảnh nền sân tập · vùng AO · UAV m/ph</span>
             </div>
 
+            <div class="menu-wiki-row">
+                <button type="button" class="btn-wiki" id="btnMenuWiki">📚 Thư viện UAV tác chiến · Biển Đông</button>
+            </div>
+
             <div class="menu-start-block">
                 <button type="button" class="secondary hidden" id="btnMenuResume">← Tiếp tục bay</button>
                 <button type="button" class="primary" id="btnStart">▶ Bắt đầu bay</button>
@@ -1006,7 +1067,17 @@
             <button type="button" class="primary" id="btnHelpClose">Đã hiểu</button>
         </div>
     </div>
+
+    <div id="wikiOverlay" class="overlay hidden">
+        <div class="panel-shell wiki-panel-shell">
+            <button type="button" class="panel-close-pin" id="btnWikiX" title="Đóng thư viện" aria-label="Đóng">×</button>
+            <div class="panel-scroll wiki-scroll">
+                <h1>📚 Thư viện UAV tác chiến</h1>
+                <div id="wikiPanelRoot"></div>
+            </div>
+        </div>
+    </div>
 </div>
-<script type="module" src="./game.js?v=20260601i"></script>
+<script type="module" src="./game.js?v=20260601j"></script>
 </body>
 </html>

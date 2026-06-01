@@ -11,6 +11,7 @@ import {
 } from './map-tiles.js';
 import { drawCourseTrack } from './course-geometry.js';
 import { drawFlightGuides, drawInputHints } from './flight-guides.js';
+import { renderWikiPanel } from './uav-wiki.js';
 import { resumeAudio, updateDroneAudio, stopDroneAudio, setBodyVolume, setWindVolume } from './drone-audio.js';
 
 const canvas = document.getElementById('game');
@@ -849,6 +850,36 @@ function toggleHelp() {
     document.getElementById('helpOverlay').classList.toggle('hidden');
 }
 
+let wikiCategory = 'all';
+
+function mountWikiPanel() {
+    const root = document.getElementById('wikiPanelRoot');
+    if (!root) return;
+    root.innerHTML = renderWikiPanel(wikiCategory);
+    root.querySelectorAll('.wiki-tab').forEach(btn => {
+        btn.addEventListener('click', () => {
+            wikiCategory = btn.dataset.wikiCat ?? 'all';
+            mountWikiPanel();
+        });
+    });
+}
+
+function toggleWiki(force) {
+    const el = document.getElementById('wikiOverlay');
+    if (!el) return;
+    let open;
+    if (force === true) open = true;
+    else if (force === false) open = false;
+    else open = el.classList.contains('hidden');
+    if (open) {
+        mountWikiPanel();
+        el.classList.remove('hidden');
+        document.getElementById('helpOverlay')?.classList.add('hidden');
+    } else {
+        el.classList.add('hidden');
+    }
+}
+
 function render() {
     try {
         resetCanvasState();
@@ -917,7 +948,7 @@ function buildFeatureList() {
     const el = document.getElementById('featureList');
     if (!el) return;
     el.innerHTML = FEATURES.map(f =>
-        `<article class="feature-card">
+        `<article class="feature-card${f.id === 'wiki' ? ' feature-card--wiki' : ''}"${f.id === 'wiki' ? ' role="button" tabindex="0" title="Mở thư viện UAV"' : ''}>
             <div class="feature-thumb feature-thumb--${f.id}" aria-hidden="true"></div>
             <div class="feature-body">
                 <strong>${f.name}</strong>
@@ -925,6 +956,7 @@ function buildFeatureList() {
             </div>
         </article>`
     ).join('');
+    el.querySelector('.feature-card--wiki')?.addEventListener('click', () => toggleWiki(true));
 }
 
 function startSelectedLevel() {
@@ -1013,6 +1045,9 @@ document.getElementById('btnGuide')?.addEventListener('click', () => toggleGuide
 document.getElementById('btnHelp').addEventListener('click', () => toggleHelp());
 document.getElementById('btnHelpClose').addEventListener('click', () => toggleHelp());
 document.getElementById('btnHelpX')?.addEventListener('click', () => toggleHelp());
+document.getElementById('btnWiki')?.addEventListener('click', () => toggleWiki(true));
+document.getElementById('btnMenuWiki')?.addEventListener('click', () => toggleWiki(true));
+document.getElementById('btnWikiX')?.addEventListener('click', () => toggleWiki(false));
 
 document.getElementById('btnWind').addEventListener('click', () => {
     const chk = document.getElementById('chkWind');

@@ -63,6 +63,8 @@ export const FEATURES = [
 
     { id: 'touch', name: 'Cần ảo mobile', desc: 'Tablet · điện thoại' },
 
+    { id: 'wiki', name: 'Thư viện UAV Biển Đông', desc: 'Tra cứu UCAV · VU-C2 · đối phương khu vực' },
+
 ];
 
 
