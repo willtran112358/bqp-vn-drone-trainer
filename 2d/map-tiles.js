@@ -58,7 +58,7 @@ const PROVIDERS = {
 
         attr: '© Esri · Maxar',
 
-        cors: false,
+        cors: true,
 
     },
 

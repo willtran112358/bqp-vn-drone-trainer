@@ -51,15 +51,17 @@ export function drawDroneTopDown(ctx, x, y, angle, scale, alt, throttle, highCon
     const shAlpha = 0.14 + (1 - altFactor) * 0.2;
     const shScale = 0.75 + (1 - altFactor) * 0.28;
 
+    // Bóng mềm không dùng ctx.filter (tránh lỗi canvas tainted sau ảnh vệ tinh)
     ctx.save();
     ctx.translate(shX, shY);
-    ctx.filter = `blur(${Math.max(1, 3 * s * (0.5 + altFactor))}px)`;
-    ctx.fillStyle = `rgba(0,0,0,${shAlpha})`;
-    ctx.beginPath();
-    ctx.ellipse(0, 0, armLen * 1.1 * shScale, armLen * 0.65 * shScale, 0, 0, Math.PI * 2);
-    ctx.fill();
+    for (let i = 3; i >= 1; i--) {
+        const t = i / 3;
+        ctx.fillStyle = `rgba(0,0,0,${shAlpha * t * 0.45})`;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, armLen * 1.15 * shScale * (0.85 + t * 0.2), armLen * 0.7 * shScale * (0.85 + t * 0.2), 0, 0, Math.PI * 2);
+        ctx.fill();
+    }
     ctx.restore();
-    ctx.filter = 'none';
 
 
 

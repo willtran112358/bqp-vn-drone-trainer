@@ -24,12 +24,28 @@
         }
         #wrap { position: relative; width: 100vw; height: 100dvh; }
 
-        canvas {
-            display: block;
-            margin-left: 52px;
+        #canvasStack {
+            position: absolute;
+            left: 52px;
+            top: 0;
             width: calc(100% - 52px);
             height: 100%;
+        }
+        #canvasStack canvas {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
             touch-action: none;
+        }
+        #mapCanvas {
+            z-index: 0;
+            pointer-events: none;
+        }
+        #game {
+            z-index: 1;
+            background: transparent;
         }
 
         /* ── Sidebar trái ── */
@@ -372,8 +388,8 @@
             #stickPanel { display: none; }
             #companyHud, #companyFooter { display: none; }
 
-            canvas {
-                margin-left: var(--sidebar-w);
+            #canvasStack {
+                left: var(--sidebar-w);
                 width: calc(100% - var(--sidebar-w));
                 height: 100dvh;
             }
@@ -529,7 +545,10 @@
 </head>
 <body>
 <div id="wrap">
-    <canvas id="game"></canvas>
+    <div id="canvasStack">
+        <canvas id="mapCanvas" aria-hidden="true"></canvas>
+        <canvas id="game"></canvas>
+    </div>
 
     <!-- Sidebar trái -->
     <nav id="sidebar">
@@ -732,6 +751,6 @@
         </div>
     </div>
 </div>
-<script type="module" src="./game.js?v=20260601b"></script>
+<script type="module" src="./game.js?v=20260601c"></script>
 </body>
 </html>

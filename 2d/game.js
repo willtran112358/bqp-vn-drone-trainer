@@ -5,13 +5,17 @@ import {
     updatePropAnimation, drawDroneTopDown, drawHelipad, drawCheckpointRing, drawThreatDrone,
 } from './drone-sprite.js';
 import { drawCompassRose, drawArenaGround, drawMapAttribution } from './terrain.js';
-import { preloadMapTiles, isMapReady, isMapLoading, getMapLoadError } from './map-tiles.js';
+import {
+    preloadMapTiles, isMapReady, isMapLoading, getMapLoadError, invalidateMapCache,
+} from './map-tiles.js';
 import { drawCourseTrack } from './course-geometry.js';
 import { drawFlightGuides, drawInputHints } from './flight-guides.js';
 import { resumeAudio, updateDroneAudio, stopDroneAudio, setBodyVolume, setWindVolume } from './drone-audio.js';
 
 const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
+const mapCanvas = document.getElementById('mapCanvas');
+const mapCtx = mapCanvas.getContext('2d');
 
 let levelIdx = 0;
 let skillId = 'co-ban';
@@ -65,6 +69,8 @@ function resize() {
 
     canvas.width = vw;
     canvas.height = vh;
+    mapCanvas.width = vw;
+    mapCanvas.height = vh;
 
     const availW = vw - sidebar - rightPad;
     const availH = vh - topPad - bottomPad;
@@ -433,10 +439,22 @@ function checkpointPassMessage(cp, isLast, hasLanding) {
 }
 
 function drawArenaBackground() {
-    ctx.fillStyle = '#2a2620';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    const mapActive = showMapTiles && isMapReady();
 
-    drawArenaGround(ctx, arenaRect.x, arenaRect.y, arenaRect.w, arenaRect.h, scale, showMapTiles);
+    if (mapActive) {
+        mapCanvas.style.visibility = 'visible';
+        mapCtx.setTransform(1, 0, 0, 1, 0, 0);
+        mapCtx.fillStyle = '#2a2620';
+        mapCtx.fillRect(0, 0, mapCanvas.width, mapCanvas.height);
+        drawArenaGround(mapCtx, arenaRect.x, arenaRect.y, arenaRect.w, arenaRect.h, scale, true);
+        drawMapAttribution(mapCtx, arenaRect.x, arenaRect.y, arenaRect.w, scale);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    } else {
+        mapCanvas.style.visibility = 'hidden';
+        ctx.fillStyle = '#2a2620';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        drawArenaGround(ctx, arenaRect.x, arenaRect.y, arenaRect.w, arenaRect.h, scale, false);
+    }
 
     if (showGrid) {
         ctx.strokeStyle = 'rgba(255,255,255,0.22)';
@@ -473,9 +491,6 @@ function drawArenaBackground() {
         (ARENA.w - 2 * ARENA.margin) * scale, (ARENA.h - 2 * ARENA.margin) * scale
     );
 
-    if (showMapTiles && isMapReady()) {
-        drawMapAttribution(ctx, arenaRect.x, arenaRect.y, arenaRect.w, scale);
-    }
 }
 
 function drawSeaZone() {
@@ -657,22 +672,16 @@ function drawDrone() {
 
     ctx.save();
     if (onMap) {
-        const r = 20 * scale;
-        ctx.fillStyle = 'rgba(249,115,22,0.45)';
-        ctx.strokeStyle = '#ea580c';
-        ctx.lineWidth = 3 * scale;
+        const halo = 26 * scale;
+        ctx.strokeStyle = 'rgba(255,255,255,0.95)';
+        ctx.lineWidth = 3.5 * scale;
+        ctx.fillStyle = 'rgba(37,99,235,0.25)';
         ctx.beginPath();
-        ctx.arc(sx, sy, r, 0, Math.PI * 2);
+        ctx.arc(sx, sy, halo, 0, Math.PI * 2);
         ctx.fill();
         ctx.stroke();
-        ctx.strokeStyle = '#fff';
-        ctx.lineWidth = 1.5 * scale;
-        ctx.beginPath();
-        ctx.moveTo(sx, sy);
-        ctx.lineTo(sx + Math.cos(drone.angle) * r * 1.4, sy + Math.sin(drone.angle) * r * 1.4);
-        ctx.stroke();
     }
-    drawDroneTopDown(ctx, sx, sy, drone.angle, scale, drone.alt, throttle, onMap);
+    drawDroneTopDown(ctx, sx, sy, drone.angle, scale, drone.alt, throttle, false);
     ctx.restore();
     drawCompassRose(ctx, offsetX + 34 * scale, offsetY + 34 * scale, 22 * scale, scale, drone.angle);
 }
@@ -686,8 +695,9 @@ function toggleHelp() {
 }
 
 function render() {
-    resetCanvasState();
-    drawArenaBackground();
+    try {
+        resetCanvasState();
+        drawArenaBackground();
     drawSeaZone();
     drawProtectZone();
     drawThreatZones();
@@ -701,6 +711,10 @@ function render() {
     drawDroneGuides();
     drawFinishBanner();
     if (running) updateStickHud();
+    } catch (err) {
+        console.error('render', err);
+        resetCanvasState();
+    }
 }
 
 let last = performance.now();
@@ -868,24 +882,34 @@ function setMapTiles(on) {
     }
     if (mapLoading || isMapLoading()) return;
 
+    invalidateMapCache();
     mapLoading = true;
     if (chk) chk.disabled = true;
     setMapStatus('⏳ Đang tải…');
 
-    preloadMapTiles().then(() => {
-        mapLoading = false;
-        if (chk) chk.disabled = false;
-        if (!showMapTiles) {
-            setMapStatus('');
-            return;
-        }
-        if (isMapReady()) setMapStatus('✓ Vệ tinh');
-        else {
-            setMapStatus(getMapLoadError() ? '✗ Lỗi — thử lại' : '');
-            if (chk) chk.checked = false;
+    preloadMapTiles()
+        .then(() => {
+            if (!showMapTiles) {
+                setMapStatus('');
+                return;
+            }
+            if (isMapReady()) setMapStatus('✓ Vệ tinh');
+            else {
+                setMapStatus(getMapLoadError() ? '✗ Lỗi — thử lại' : '');
+                if (chk) chk.checked = false;
+                showMapTiles = false;
+            }
+        })
+        .catch(() => {
+            setMapStatus('✗ Lỗi — thử lại');
+            if (chk) { chk.checked = false; }
             showMapTiles = false;
-        }
-    });
+        })
+        .finally(() => {
+            mapLoading = false;
+            if (chk) chk.disabled = false;
+            resetCanvasState();
+        });
 }
 
 document.getElementById('chkMap')?.addEventListener('change', (e) => { setMapTiles(e.target.checked); });
