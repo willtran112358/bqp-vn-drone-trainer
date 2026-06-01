@@ -186,7 +186,7 @@ function update(dt) {
     const mag = Math.hypot(p, r);
     if (mag > s.angleLimit) { const f = s.angleLimit / mag; p *= f; r *= f; }
 
-    const speedMul = 0.4 + drone.alt * 0.9;
+    const speedMul = 0.3 + drone.alt * 0.55;
     const localFx = -p * s.maxSpeed * speedMul;
     const localRy = r * s.maxSpeed * speedMul;
     const cos = Math.cos(drone.angle), sin = Math.sin(drone.angle);
