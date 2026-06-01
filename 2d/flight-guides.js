@@ -63,7 +63,35 @@ function drawArrow(ctx, x0, y0, dx, dy, color, scale, label) {
  * @param {object} v { input, orientation, acceleration, wind, composite } world vectors
  * @param {object} flags { player, wind }
  */
-export function drawFlightGuides(ctx, sx, sy, scale, v, flags) {
+/** Mũi tên trắng — hướng mũi / lực đẩy (tham khảo 2D Drone Simulator) */
+export function drawHeadingArrow(ctx, sx, sy, angle, scale, alt) {
+    const len = (28 + alt * 24) * scale;
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255,255,255,0.95)';
+    ctx.lineWidth = Math.max(1.8, 2.2 * scale);
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(sx, sy);
+    ctx.lineTo(sx + Math.cos(angle) * len, sy + Math.sin(angle) * len);
+    ctx.stroke();
+    const head = 6 * scale;
+    const ax = sx + Math.cos(angle) * len;
+    const ay = sy + Math.sin(angle) * len;
+    const a = angle;
+    ctx.beginPath();
+    ctx.moveTo(ax, ay);
+    ctx.lineTo(ax - head * Math.cos(a - 0.5), ay - head * Math.sin(a - 0.5));
+    ctx.lineTo(ax - head * Math.cos(a + 0.5), ay - head * Math.sin(a + 0.5));
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(255,255,255,0.95)';
+    ctx.fill();
+    ctx.restore();
+}
+
+export function drawFlightGuides(ctx, sx, sy, scale, v, flags, headingAngle, alt) {
+    if (flags.player && headingAngle != null) {
+        drawHeadingArrow(ctx, sx, sy, headingAngle, scale, alt ?? 0.5);
+    }
     if (flags.player) {
         drawArrow(ctx, sx, sy, v.input.x, v.input.y, GUIDE_COLORS.input, scale, GUIDE_LABELS.input);
         drawArrow(ctx, sx, sy, v.orientation.x, v.orientation.y, GUIDE_COLORS.orientation, scale, GUIDE_LABELS.orientation);

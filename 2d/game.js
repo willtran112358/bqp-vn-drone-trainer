@@ -58,6 +58,9 @@ const guideVectors = {
 };
 let scale = 1, offsetX = 0, offsetY = 0;
 let arenaRect = { x: 0, y: 0, w: 0, h: 0 };
+let prevAlt = 0.35;
+const ghostTrail = [];
+const GHOST_TRAIL_MAX = 5;
 
 function isMobileLayout() {
     return window.matchMedia('(max-width: 768px), (hover: none) and (pointer: coarse)').matches;
@@ -90,8 +93,15 @@ window.visualViewport?.addEventListener('resize', resize);
 window.visualViewport?.addEventListener('scroll', resize);
 resize();
 
+/** Camera theo drone — drone luôn ở giữa vùng sân (giống simulator gốc) */
 function worldToScreen(x, y) {
-    return [offsetX + x * scale, offsetY + y * scale];
+    const cx = offsetX + arenaRect.w / 2;
+    const cy = offsetY + arenaRect.h / 2;
+    return [cx + (x - drone.x) * scale, cy + (y - drone.y) * scale];
+}
+
+function arenaCenterScreen() {
+    return [offsetX + arenaRect.w / 2, offsetY + arenaRect.h / 2];
 }
 
 function resetDrone() {
@@ -108,6 +118,8 @@ function resetDrone() {
     landHoldToastShown = false;
     pirouetteYawAccum = 0;
     prevVx = prevVy = 0;
+    prevAlt = drone.alt;
+    ghostTrail.length = 0;
     hideActionToast();
     if (lv.defaultWind) {
         windStrength = lv.defaultWind.strength;
@@ -190,6 +202,16 @@ function updateHud() {
     document.getElementById('statCp').textContent = total ? `${Math.min(cpIndex, total)}/${total}` : '—';
     document.getElementById('altFill').style.height = `${drone.alt * 100}%`;
     document.getElementById('altVal').textContent = `${Math.round(drone.alt * 120)}m`;
+    const climbEl = document.getElementById('altClimb');
+    const descEl = document.getElementById('altDesc');
+    if (climbEl && descEl) {
+        const th = lastInputs.throttle;
+        const altDelta = drone.alt - prevAlt;
+        const climbPct = Math.min(100, Math.max(0, th) * 55 + Math.max(0, altDelta) * 420);
+        const descPct = Math.min(100, Math.max(0, -th) * 55 + Math.max(0, -altDelta) * 420);
+        climbEl.style.height = `${climbPct}%`;
+        descEl.style.height = `${descPct}%`;
+    }
     updateObjective();
     updateStickHud();
     updateFinishOverlay();
@@ -270,12 +292,19 @@ function update(dt) {
     prevVx = drone.vx;
     prevVy = drone.vy;
 
-    drone.vx *= s.drag;
-    drone.vy *= s.drag;
+    const drag = s.drag + (1 - s.drag) * drone.alt * 0.06;
+    drone.vx *= drag;
+    drone.vy *= drag;
     drone.x += drone.vx * dt;
     drone.y += drone.vy * dt;
 
-    updateGuideVectors(inp, p, r, ax, ay);
+    if (airborne && (Math.abs(drone.vx) > 8 || Math.abs(drone.vy) > 8)) {
+        ghostTrail.push({ x: drone.x, y: drone.y, angle: drone.angle, alt: drone.alt });
+        if (ghostTrail.length > GHOST_TRAIL_MAX) ghostTrail.shift();
+    }
+
+    updateGuideVectors(inp, p, r, ax, ay, airborne);
+    prevAlt = drone.alt;
     checkPirouette(inp, dt);
 
     const m = ARENA.margin;
@@ -297,7 +326,7 @@ function update(dt) {
     updateHud();
 }
 
-function updateGuideVectors(inp, pitch, roll, ax, ay) {
+function updateGuideVectors(inp, pitch, roll, ax, ay, airborne) {
     const orientMag = Math.hypot(pitch, roll);
     const inpMag = Math.hypot(inp.pitch, inp.roll) + Math.abs(inp.throttle) * 0.35 + Math.abs(inp.yaw) * 0.25;
     const headX = Math.cos(drone.angle);
@@ -314,9 +343,17 @@ function updateGuideVectors(inp, pitch, roll, ax, ay) {
         guideVectors.input.y *= s;
     }
 
-    guideVectors.orientation.x = headX * (-pitch) + (-Math.sin(drone.angle)) * roll;
-    guideVectors.orientation.y = headY * (-pitch) + Math.cos(drone.angle) * roll;
-    if (orientMag < 0.02) {
+    let ox = headX * (-pitch) + (-Math.sin(drone.angle)) * roll;
+    let oy = headY * (-pitch) + Math.cos(drone.angle) * roll;
+    const spd = Math.hypot(drone.vx, drone.vy);
+    if (airborne && spd > 25) {
+        const blend = Math.min(0.45, spd / 200);
+        ox = ox * (1 - blend) + (drone.vx / spd) * blend;
+        oy = oy * (1 - blend) + (drone.vy / spd) * blend;
+    }
+    guideVectors.orientation.x = ox;
+    guideVectors.orientation.y = oy;
+    if (orientMag < 0.02 && spd < 25) {
         guideVectors.orientation.x = guideVectors.orientation.y = 0;
     }
 
@@ -674,12 +711,40 @@ function resetCanvasState() {
     ctx.setLineDash([]);
 }
 
+function drawGhostTrail() {
+    if (!ghostTrail.length) return;
+    for (let i = 0; i < ghostTrail.length; i++) {
+        const g = ghostTrail[i];
+        const [gx, gy] = worldToScreen(g.x, g.y);
+        const alpha = 0.08 + (i / ghostTrail.length) * 0.12;
+        ctx.save();
+        ctx.globalAlpha = alpha;
+        drawDroneTopDown(ctx, gx, gy, g.angle, scale * 0.92, g.alt, 0.3, false);
+        ctx.restore();
+    }
+}
+
+function drawCenterCrosshair() {
+    const [cx, cy] = arenaCenterScreen();
+    const r = 5 * scale;
+    ctx.save();
+    ctx.strokeStyle = 'rgba(220,38,38,0.85)';
+    ctx.lineWidth = Math.max(1.2, 1.5 * scale);
+    ctx.beginPath();
+    ctx.moveTo(cx - r, cy);
+    ctx.lineTo(cx + r, cy);
+    ctx.moveTo(cx, cy - r);
+    ctx.lineTo(cx, cy + r);
+    ctx.stroke();
+    ctx.restore();
+}
+
 function drawDroneGuides() {
     const [sx, sy] = worldToScreen(drone.x, drone.y);
     drawFlightGuides(ctx, sx, sy, scale, guideVectors, {
         player: showGuidePlayer,
         wind: showGuideWind,
-    });
+    }, drone.angle, drone.alt);
     const anyInput = Math.abs(lastInputs.throttle) + Math.abs(lastInputs.yaw)
         + Math.abs(lastInputs.pitch) + Math.abs(lastInputs.roll) > 0.12;
     if (showInputHints && anyInput) {
@@ -729,8 +794,10 @@ function render() {
     drawCourseTrack(ctx, level(), scale, worldToScreen);
     drawObstacles();
     drawCheckpoints();
+    drawGhostTrail();
     drawDrone();
     drawDroneGuides();
+    drawCenterCrosshair();
     drawFinishBanner();
     if (running) updateStickHud();
     } catch (err) {
