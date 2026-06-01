@@ -39,6 +39,7 @@ let showGuidePlayer = true;
 let showGuideWind = true;
 let showInputHints = true;
 let soundEnabled = true;
+let guidePanelOpen = true;
 let pirouetteYawAccum = 0;
 
 /** Độ cao chuẩn hóa 0..1 — 0 = chạm đất */
@@ -66,12 +67,25 @@ function isMobileLayout() {
     return window.matchMedia('(max-width: 768px), (hover: none) and (pointer: coarse)').matches;
 }
 
+function applyGuidePanelUi() {
+    document.getElementById('btnGuide')?.classList.toggle('active', isMobileLayout() && guidePanelOpen);
+    resize();
+}
+
+function toggleGuidePanel() {
+    guidePanelOpen = !guidePanelOpen;
+    applyGuidePanelUi();
+}
+
 function resize() {
     const mobile = isMobileLayout();
+    document.body.classList.toggle('mobile-guide-hidden', mobile && !guidePanelOpen);
+    document.getElementById('topRight')?.classList.toggle('guide-collapsed', mobile && !guidePanelOpen);
     const sidebar = mobile ? 44 : 52;
-    const topPad = mobile ? 92 : 8;
-    const bottomPad = mobile ? 138 : 8;
-    const rightPad = mobile ? 46 : 8;
+    const guideOpen = !mobile || guidePanelOpen;
+    const topPad = mobile ? (guideOpen ? 78 : 36) : 8;
+    const bottomPad = mobile ? 118 : 8;
+    const rightPad = mobile ? 40 : 8;
 
     const vw = window.visualViewport?.width ?? window.innerWidth;
     const vh = window.visualViewport?.height ?? window.innerHeight;
@@ -83,7 +97,7 @@ function resize() {
 
     const availW = vw - sidebar - rightPad;
     const availH = vh - topPad - bottomPad;
-    scale = Math.min(availW / ARENA.w, availH / ARENA.h) * (mobile ? 0.99 : 0.96);
+    scale = Math.min(availW / ARENA.w, availH / ARENA.h) * (mobile ? 1.04 : 0.96);
     offsetX = sidebar + Math.max(0, (availW - ARENA.w * scale) / 2);
     offsetY = topPad + Math.max(0, (availH - ARENA.h * scale) / 2);
     arenaRect = { x: offsetX, y: offsetY, w: ARENA.w * scale, h: ARENA.h * scale };
@@ -254,10 +268,13 @@ function update(dt) {
     elapsed += dt;
     drone.angle += inp.yaw * s.yawRate * dt;
 
+    const hoverThrust = 0.35;
     const thrust = (inp.throttle * 0.5 + 0.5) * s.thrustPower;
-    drone.alt += (thrust - 0.35) * s.altDecay * dt;
-    if (drone.alt <= GROUND_EPS) drone.alt = GROUND_ALT;
-    drone.alt = Math.min(1, drone.alt);
+    let lift = (thrust - hoverThrust) * s.altDecay;
+    if (drone.alt <= GROUND_EPS && lift > 0) lift *= 2.5;
+    drone.alt += lift * dt;
+    drone.alt = Math.min(1, Math.max(0, drone.alt));
+    if (drone.alt <= GROUND_EPS && lift <= 0) drone.alt = GROUND_ALT;
 
     const airborne = drone.alt > GROUND_EPS;
 
@@ -877,7 +894,11 @@ function showMenu(show, opts = {}) {
     if (soundEnabled) resumeAudio();
     menuCanResume = false;
     updateMenuResumeUi();
-    if (!opts.resume) resetDrone();
+    if (!opts.resume) {
+        resetDrone();
+        if (isMobileLayout()) guidePanelOpen = false;
+    }
+    applyGuidePanelUi();
 }
 
 function pauseToMenu() {
@@ -920,6 +941,7 @@ document.getElementById('btnFinishMenu')?.addEventListener('click', () => exitTo
 document.getElementById('btnFinishClose')?.addEventListener('click', () => exitToMainMenu());
 document.getElementById('btnFinishRetry')?.addEventListener('click', () => resetDrone());
 document.getElementById('btnReset').addEventListener('click', () => resetDrone());
+document.getElementById('btnGuide')?.addEventListener('click', () => toggleGuidePanel());
 document.getElementById('btnHelp').addEventListener('click', () => toggleHelp());
 document.getElementById('btnHelpClose').addEventListener('click', () => toggleHelp());
 document.getElementById('btnHelpX')?.addEventListener('click', () => toggleHelp());
@@ -1018,9 +1040,11 @@ document.getElementById('windSlider').addEventListener('input', (e) => {
 
 setBodyVolume(0.7);
 setWindVolume(0.7);
+if (isMobileLayout()) guidePanelOpen = false;
 buildLevelList();
 buildFeatureList();
 initTouchControls();
+applyGuidePanelUi();
 document.getElementById('companyFooter').textContent = COMPANY.name;
 document.getElementById('companyMenu').textContent = COMPANY.name;
 document.getElementById('companyHud').textContent = COMPANY.short;

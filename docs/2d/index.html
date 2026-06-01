@@ -421,9 +421,12 @@
         @media (hover: none) and (pointer: coarse), (max-width: 768px) {
             :root {
                 --sidebar-w: 44px;
-                --hud-top: 92px;
-                --hud-bottom: 138px;
-                --alt-w: 46px;
+                --hud-top: 78px;
+                --hud-bottom: 118px;
+                --alt-w: 38px;
+            }
+            body.mobile-guide-hidden {
+                --hud-top: 36px;
             }
 
             #stickPanel { display: none; }
@@ -431,9 +434,10 @@
 
             #canvasStack {
                 left: var(--sidebar-w);
-                width: calc(100% - var(--sidebar-w));
+                width: calc(100% - var(--sidebar-w) - var(--alt-w));
                 height: 100dvh;
             }
+            #topRight.guide-collapsed { display: none !important; }
             #sidebar {
                 width: var(--sidebar-w);
                 padding: 8px 0;
@@ -469,22 +473,30 @@
             /* Ẩn Wind card — dùng nút 💨 sidebar */
             #windCard { display: none; }
 
-            /* Guide View — hàng dưới objective, grid 2 cột */
+            body.mobile-guide-hidden #objective {
+                top: 2px;
+                padding: 4px 24px 4px 6px;
+            }
+
+            /* Guide View — ẩn mặc định; bật qua nút 📋 */
             #topRight {
-                top: 46px;
-                left: calc(var(--sidebar-w) + 4px);
-                right: calc(var(--alt-w) + 6px);
+                top: 40px;
+                left: calc(var(--sidebar-w) + 2px);
+                right: calc(var(--alt-w) + 2px);
                 flex-direction: column;
                 align-items: stretch;
                 gap: 0;
+                max-height: min(42vh, 280px);
+                overflow-y: auto;
             }
             #guidePanel {
-                padding: 4px 8px;
+                padding: 6px 8px;
                 font-size: 0.62rem;
                 display: grid;
                 grid-template-columns: 1fr 1fr;
-                column-gap: 6px;
+                column-gap: 4px;
             }
+            #guidePanel .sound-row { display: none; }
             #guidePanel h4 {
                 grid-column: 1 / -1;
                 margin: 0 0 2px;
@@ -501,11 +513,11 @@
                 margin-top: 0 !important;
             }
 
-            /* Stats — giữa dưới, trên cần ảo */
+            /* Stats — gọn, trên cần ảo */
             #stats {
                 left: 50%;
                 transform: translateX(-50%);
-                bottom: calc(var(--hud-bottom) - 4px);
+                bottom: calc(var(--hud-bottom) - 2px);
                 padding: 4px 10px;
                 font-size: 0.62rem;
                 line-height: 1.35;
@@ -516,23 +528,25 @@
             #stats .val { font-size: 0.62rem; }
             #statBranch { display: none; }
 
-            /* ALT — cạnh phải, giữa màn */
+            /* ALT — cạnh phải, gọn */
             #altPanel {
-                right: 4px;
+                right: 2px;
                 top: 50%;
                 bottom: auto;
                 transform: translateY(-50%);
-                padding: 5px 6px;
+                padding: 4px 5px;
             }
-            #altPanel h4 { margin: 0 0 4px; font-size: 0.6rem; }
-            #altBar { width: 16px; height: 72px; }
-            #altVal { font-size: 0.6rem; margin-top: 4px; }
+            #altPanel h4 { margin: 0 0 3px; font-size: 0.58rem; }
+            #altGauges { height: 88px; }
+            .alt-side { height: 88px; width: 5px; }
+            #altBar { width: 14px; height: 88px; }
+            #altVal { font-size: 0.58rem; margin-top: 3px; }
 
-            /* Cần ảo — góc dưới, không đè stats */
+            /* Cần ảo — to hơn, sát mép */
             .touch-zone {
-                bottom: 10px;
-                width: min(112px, 30vw);
-                height: min(112px, 30vw);
+                bottom: 8px;
+                width: min(128px, 34vw);
+                height: min(128px, 34vw);
             }
             .touch-left { left: calc(var(--sidebar-w) + 4px); }
             .touch-right { right: 4px; }
@@ -595,6 +609,7 @@
     <nav id="sidebar">
         <button type="button" id="btnMenu" title="Menu / Nhiệm vụ">🛸</button>
         <button type="button" id="btnWind" title="Gió">💨</button>
+        <button type="button" id="btnGuide" title="Hướng dẫn bay / tùy chọn">📋</button>
         <button type="button" id="btnHelp" title="Trợ giúp">🎮</button>
         <button type="button" id="btnReset" title="Reset (R)">↺</button>
         <div class="spacer"></div>
@@ -804,6 +819,6 @@
         </div>
     </div>
 </div>
-<script type="module" src="./game.js?v=20260601f"></script>
+<script type="module" src="./game.js?v=20260601g"></script>
 </body>
 </html>

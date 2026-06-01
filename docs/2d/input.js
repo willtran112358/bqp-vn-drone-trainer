@@ -80,13 +80,8 @@ export function readInputs() {
 
 
 
-    if (touchLeft.x || touchLeft.y) {
-
-        yaw += touchLeft.x;
-
-        throttle += touchLeft.y;
-
-    }
+    yaw += touchLeft.x;
+    throttle += touchLeft.y;
 
     if (touchRight.x || touchRight.y) {
 
