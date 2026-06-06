@@ -11,7 +11,7 @@ export const SIM_ARCHITECTURE = {
         { id: 'seaZone', name: 'Vùng biển (≋)', role: 'Kịch bản HQ/CSB · ven biển' },
         { id: 'protectZone', name: 'Khu BV / AO', role: 'Vùng cần bảo vệ (vòng xanh)' },
         { id: 'threatZones', name: 'UAV địch m/ph', role: 'Vùng đỏ · mô phỏng xâm nhập hướng Đ' },
-        { id: 'allyPosts', name: 'Điểm ta / gác', role: 'Vị trí 🇻🇳 · radar · sân HL' },
+        { id: 'allyPosts', name: 'Điểm ta / gác', role: 'Vị trí 🇻🇳 · radar · VU-MALE ISR · sân HL' },
         { id: 'obstacles', name: 'Chướng ngại', role: 'Vật cản tĩnh trên sân' },
         { id: 'checkpoints', name: 'Điểm QS / khóa tuyến', role: 'Tuần tra · trinh sát' },
         { id: 'landing', name: 'Bãi H', role: 'Hạ cánh · rút lui' },
@@ -26,6 +26,7 @@ export const SIM_ARCHITECTURE = {
         'Giữ wiki làm lớp “tri thức” — không cần thêm object 3D ngay.',
         'Tương lai có thể thêm: vùng ADIZ (đường đứt), vùng ECM (vòng tím), quỹ đạo UAV ta (đường xanh đứt).',
         'Kịch bản mới nên gắn doctrine rõ (trinh sát / PK / cảm tử) thay vì chỉ thêm hình học.',
+        'VU-MALE (2025–2026): allyPost tĩnh trên kịch bản ven biển — mô phỏng ISR tầm xa, học viên vẫn điều khiển UAV VLOS tầm thấp.',
     ],
 };
 
@@ -100,14 +101,34 @@ export const WIKI_ARTICLES = [
 **Vai trò:** chiến tranh phi đối xứng, bảo vệ chủ quyền — rừng nhiệt đới đến ven biển.`,
     },
     {
+        id: 'vu-male',
+        category: 'viet-nam',
+        title: 'VU-MALE (Viettel)',
+        subtitle: 'UAV đa năng tầm xa · MALE cấp chiến lược',
+        tags: ['🇻🇳', 'MALE', 'ISR'],
+        specs: 'Sải cánh 17 m · dài 8,5 m · MTOW 1.500 kg · tải 500 kg · tầm ~1.000 km · ≥24 h · trần 10 km · 140–200 km/h',
+        imageNote: 'Ảnh báo chí công khai — bay thử thành công 2025–2026; thân trắng, đuôi đôi boom, động cơ đẩy.',
+        body: `UAV đa năng tầm xa do Viettel nghiên cứu, chế tạo trong nước — lần ra mắt công chúng tại Triển lãm thành tựu 80 năm (8/2025), sau đó **bay thử thành công** với tầm hoạt động khoảng **1.000 km** và thời gian bay liên tục **≥24 giờ** (nguồn mở 2025–2026).
+
+**Thiết kế:** cánh cao tỷ số, thân trắng mũi cam, đuôi đôi boom, động cơ cánh quạt đẩy — cấu hình MALE (Medium-Altitude Long-Endurance) tương tự Predator/Reaper class.
+
+**Nhiệm vụ:** trinh sát quang/điện tử, chỉ thị mục tiêu thời gian thực, trinh sát điện tử (ELINT), chuyển tiếp thông tin, tấn công chính xác (tên lửa, bom thông minh) nhờ đa tải tối đa 500 kg.
+
+**Địa hình tác chiến:** đất liền, biên giới, vùng biển, hải đảo — phù hợp giám sát Biển Đông dài ngày, liên hợp PK-KQ/HQ/CSB.
+
+**Trong mô phỏng:** xuất hiện dưới dạng **allyPost tĩnh** trên kịch bản ven biển (nhánh HQ/QK5); học viên vẫn điều khiển UAV VLOS tầm thấp, VU-MALE là lớp bối cảnh ISR tầm xa.`,
+    },
+    {
         id: 'vn-uav-eco',
         category: 'viet-nam',
         title: 'Hệ sinh thái UAV Việt Nam',
-        subtitle: 'Triển lãm quốc phòng · tầm xa',
+        subtitle: 'Triển lãm quốc phòng · tầm xa · bay thử',
         tags: ['🇻🇳'],
-        body: `Ngoài VU-C2, báo chí quốc phòng ghi nhận các dòng UAV tầm xa, mang vũ khí chính xác (triển lãm 2024) — hướng tới trinh sát–tấn công tích hợp.
+        body: `Hệ sinh thái Viettel/VN gồm nhiều tầng: **VU-C2** (cảm tử tầm gần), **VU-R70** (trinh sát hạng nhẹ), **VU-MALE** (đa năng tầm xa ~1.000 km, ≥24 h — bay thử thành công 2025–2026).
 
-**HL trong mô phỏng:** nhánh Cơ sở → Biên phòng → PK-KQ → Hải quân → Quân khu; khóa tuyến hình học tách riêng.`,
+**VU-MALE** là bước nhảy cấp chiến lược: tự chủ thiết kế, sản xuất 100% trong nước, có thể mang quang điện tử, radar, EW, vũ khí chính xác.
+
+**HL trong mô phỏng:** nhánh Cơ sở → Biên phòng → PK-KQ → Hải quân → Quân khu; khóa tuyến hình học tách riêng. Kịch bản ven biển gắn allyPost VU-MALE làm bối cảnh ISR.`,
     },
     {
         id: 'us-reaper',
@@ -218,9 +239,9 @@ Khu vực: ít trực tiếp Biển Đông nhưng là mẫu UCAV hiện đại c
         tags: ['Biển Đông', 'BQP'],
         body: `**Đặc thù:** đảo nhỏ, khoảng cách xa, gió biển, ECM; đối phương triển khai ISR và UCAV từ tàu/đảo/đất liền.
 
-**Vai trò UAV ta:** tuần tra biên, phát hiện xâm nhập m/ph, chỉ mục tiêu cho PK-KQ/HQ, cảm tử (VU-C2) khi cần.
+**Vai trò UAV ta:** tuần tra biên, phát hiện xâm nhập m/ph, chỉ mục tiêu cho PK-KQ/HQ, cảm tử (VU-C2) khi cần; **VU-MALE** giám sát tầm xa 1.000 km / 24 h trên biển và hải đảo.
 
-**Trong mô phỏng:** nhánh HQ/CSB (seaZone), Biên phòng (threatZones), PK-KQ (radar/allyPosts).`,
+**Trong mô phỏng:** nhánh HQ/CSB (seaZone + allyPost VU-MALE), Biên phòng (threatZones), PK-KQ (radar/allyPosts).`,
     },
     {
         id: 'bqp-doctrine',
@@ -236,7 +257,9 @@ Khu vực: ít trực tiếp Biển Đông nhưng là mẫu UCAV hiện đại c
 
 4. **HL:** Mode 2, vector lệnh, gió/ECM, hạ cánh an toàn — luyện trước khi tác chiến thật.
 
-5. **Cảm tử có kiểm soát:** VU-C2 — trinh sát trước, chỉ huy quyết định tấn công.`,
+5. **Cảm tử có kiểm soát:** VU-C2 — trinh sát trước, chỉ huy quyết định tấn công.
+
+6. **ISR tầm xa:** VU-MALE — giám sát Biển Đông dài ngày, chỉ mục tiêu cho PK-KQ/HQ; UAV VLOS tầm thấp bổ sung lớp gần.`,
     },
 ];
 
@@ -312,6 +335,6 @@ export function renderWikiPanel(activeCategory = 'all') {
         </div>
         <div class="wiki-tabs" role="tablist">${tabs}</div>
         <div class="wiki-articles">${renderWikiArticles(activeCategory)}</div>
-        <p class="wiki-foot">Nguồn tóm lược: tài liệu mở, báo quốc phòng VN (2024). Chỉ dùng cho HL — không thay tài liệu mật.</p>
+        <p class="wiki-foot">Nguồn tóm lược: tài liệu mở, báo quốc phòng VN (2024–2026). Chỉ dùng cho HL — không thay tài liệu mật.</p>
     `;
 }

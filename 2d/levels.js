@@ -63,7 +63,7 @@ export const FEATURES = [
 
     { id: 'touch', name: 'Cần ảo mobile', desc: 'Tablet · điện thoại' },
 
-    { id: 'wiki', name: 'Thư viện UAV Biển Đông', desc: 'Tra cứu UCAV · VU-C2 · đối phương khu vực' },
+    { id: 'wiki', name: 'Thư viện UAV Biển Đông', desc: 'Tra cứu UCAV · VU-C2 · VU-MALE · đối phương khu vực' },
 
 ];
 
@@ -320,9 +320,9 @@ export const LEVELS = [
 
         name: 'HQ · Bảo vệ tàu / cảng',
 
-        desc: 'Tuần ven biển · UAV m/ph từ biển Đông',
+        desc: 'Tuần ven biển · UAV m/ph từ biển Đông · VU-MALE ISR tầm xa',
 
-        doctrine: 'Trinh sát · bảo vệ mục tiêu',
+        doctrine: 'Trinh sát · bảo vệ mục tiêu · liên hợp VU-MALE',
 
         spawn: { x: 200, y: 400, angle: 0 },
 
@@ -335,6 +335,8 @@ export const LEVELS = [
             { x: 120, y: 480, label: '⚓ HQ' },
 
             { x: 120, y: 120, label: 'Radar bờ' },
+
+            { x: 520, y: 80, label: 'VU-MALE' },
 
         ],
 
@@ -464,9 +466,9 @@ export const LEVELS = [
 
         name: 'QK5 (KV) · Nam Trung Bộ & Tây Nguyên',
 
-        desc: 'BTL QK5 Đà Nẵng — trinh sát ven biển · đe dọa biển Đông',
+        desc: 'BTL QK5 Đà Nẵng — trinh sát ven biển · VU-MALE · đe dọa biển Đông',
 
-        doctrine: 'Phối hợp QA · HQ ven bờ',
+        doctrine: 'Phối hợp QA · HQ · ISR VU-MALE ven bờ',
 
         spawn: { x: 180, y: 450, angle: 0 },
 
@@ -479,6 +481,8 @@ export const LEVELS = [
             { x: 100, y: 480, label: 'QK5 KV' },
 
             { x: 100, y: 120, label: 'PK-KQ' },
+
+            { x: 480, y: 60, label: 'VU-MALE' },
 
         ],
 

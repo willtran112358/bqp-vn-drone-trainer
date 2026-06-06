@@ -9,6 +9,7 @@ TITLES = {
     "uav-khai-niem": "Quadcopter",
     "ucav": "Unmanned combat aerial vehicle",
     "vu-c2": "Loitering munition",
+    "vu-male": "VU-MALE Viettel MALE UAV",
     "vn-uav-eco": "Viettel",
     "us-reaper": "General Atomics MQ-9 Reaper",
     "us-stealth-uav": "Kratos XQ-58 Valkyrie",

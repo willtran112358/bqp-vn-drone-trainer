@@ -19,6 +19,11 @@
     "credit": "Loitering munition",
     "alt": "Loitering munition"
   },
+  "vu-male": {
+    "file": "assets/wiki/vu-male.png",
+    "credit": "VU-MALE — UAV đa năng tầm xa Viettel (nguồn báo chí công khai)",
+    "alt": "VU-MALE twin-boom MALE UAV Việt Nam"
+  },
   "vn-uav-eco": {
     "file": "assets/wiki/vn-uav-eco.jpg",
     "credit": "Viettel",
